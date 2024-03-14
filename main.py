@@ -1,3 +1,5 @@
+# Striped balls detection with ArUco markers
+
 import numpy as np
 import cv2
 import tensorflow as tf
