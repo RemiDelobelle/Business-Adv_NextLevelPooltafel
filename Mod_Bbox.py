@@ -4,37 +4,6 @@ from shapely.geometry import Polygon, Point
 from concurrent.futures import ThreadPoolExecutor
 from Mod_Constants import PRINTS, PRINTS_DEBUG, THRESHOLD_STRIPED_BALLS, MARGIN_STRIPED_BALLS
 
-# def process_bbox(bbox, clean_img, mask_stripedBalls, mask_solidBalls, projection_MASK, coor_stripedBalls, coor_solidBalls):
-#     xbox1, ybox1, xbox2, ybox2 = bbox
-#     xbox1 = max(0, xbox1)
-#     ybox1 = max(0, ybox1)
-#     xbox2 = max(0, xbox2)
-#     ybox2 = max(0, ybox2)
-
-#     roi = clean_img[ybox1:ybox2, xbox1:xbox2]
-    
-#     if roi is not None:
-#         gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-#         _, binary = cv2.threshold(gray, 240, 255, cv2.THRESH_BINARY)
-#         white_pixel_count = cv2.countNonZero(binary)
-#         total_pixel_count = roi.size
-#         white_percentage = ((white_pixel_count / total_pixel_count) * 100) + MARGIN_STRIPED_BALLS
-#         print(f"White percentage: {white_percentage}%") if PRINTS else None
-        
-#         mask = np.zeros_like(clean_img)
-#         cv2.rectangle(mask, (xbox1, ybox1), (xbox2, ybox2), (255, 255, 255), -1)
-#         cv2.rectangle(projection_MASK, (xbox1, ybox1), (xbox2, ybox2), (255, 255, 255), 2)
-        
-#         if white_percentage > THRESHOLD_STRIPED_BALLS:
-#             mask_stripedBalls = cv2.bitwise_and(mask, clean_img)
-#             coor_stripedBalls.append([xbox1, ybox1, xbox2, ybox2])
-#         else:
-#             mask_solidBalls = cv2.bitwise_and(mask, clean_img)
-#             cv2.rectangle(projection_MASK, (xbox1, ybox1), (xbox2, ybox2), (0, 255, 255), 2)
-#             coor_solidBalls.append([xbox1, ybox1, xbox2, ybox2])
-
-#     return mask_stripedBalls, mask_solidBalls, projection_MASK, coor_stripedBalls, coor_solidBalls
-
 
 def process_bbox(bbox, clean_img, mask_stripedBalls, mask_solidBalls, projection_MASK, coor_stripedBalls, coor_solidBalls):
     print(f"[DEBUG] Processing bbox: {bbox}") if PRINTS_DEBUG else None
@@ -96,7 +65,6 @@ def calc_centers(contours):
             centers.append(None)
     return centers
 
-
 def calc_bboxes(centers, last_middle_points, box_size, img, projection_MASK, drawing = True):
     bbox_coor = []
     polygon = Polygon(last_middle_points)
@@ -104,12 +72,12 @@ def calc_bboxes(centers, last_middle_points, box_size, img, projection_MASK, dra
         if center is not None:
             point = Point(center[0], center[1])
             if polygon.contains(point):
-                cv2.circle(projection_MASK, center, 10, (0,0,255), 3) if drawing else None
+                # cv2.circle(projection_MASK, center, 10, (0,0,255), 3) if drawing else None
 
                 xbox1 = center[0] - box_size
                 ybox1 = center[1] - box_size
                 xbox2 = center[0] + box_size
                 ybox2 = center[1] + box_size
                 bbox_coor.append([xbox1, ybox1, xbox2, ybox2])
-                cv2.rectangle(img, (xbox1, ybox1), (xbox2, ybox2), (0, 255, 0), 2) if drawing else None
+                cv2.rectangle(img, (xbox1, ybox1), (xbox2, ybox2), (0, 0, 255), 2) if drawing else None
     return bbox_coor

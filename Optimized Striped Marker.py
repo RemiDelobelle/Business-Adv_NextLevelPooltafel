@@ -38,7 +38,7 @@ frame_height = 1080
 # cap.set(cv2.CAP_PROP_FPS, 60)
 # cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
 
-# Run HP Webcam software to autofocus
+# #Run HP Webcam software to autofocus
 # focus = 1
 # cap.set(28, focus)
 
@@ -87,6 +87,38 @@ while True:
     # Draw bounding boxes
     bbox_coor = Mod_Bbox.calc_bboxes(centers, last_middle_points, BBOXSIZE, img, projection_MASK, drawing=True)
 
+    # ==========================================================================
+    circ_img = clean_img.copy()
+
+    # Define the minimum size of circle (minimum radius)
+    min_circle_radius = 10  # Adjust this value as needed
+
+    # Detect circles within bounding boxes
+    for bbox in bbox_coor:
+        xbox1, ybox1, xbox2, ybox2 = bbox
+        roi = clean_img[ybox1:ybox2, xbox1:xbox2]
+        gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+        _, thresh = cv2.threshold(gray_roi, 50, 255, cv2.THRESH_BINARY)  # Adjust the threshold value as needed
+
+        # Detect circles using Hough Circle Transform
+        circles = cv2.HoughCircles(gray_roi, cv2.HOUGH_GRADIENT, dp=1, minDist=20, param1=50, param2=30, minRadius=5, maxRadius=30)
+
+        if circles is not None:
+            circles = np.uint16(np.around(circles))
+            for circle in circles[0, :]:
+                center = (circle[0], circle[1])
+                radius = circle[2]
+                
+                if radius >= min_circle_radius:
+                    # Adjust circle center coordinates based on bounding box coordinates
+                    adjusted_center = (center[0] + xbox1, center[1] + ybox1)
+                    
+                    cv2.circle(img, adjusted_center, radius, (0, 255, 0), 2) 
+                    cv2.circle(projection_MASK, adjusted_center, radius, (0, 255, 0), 2)  
+                    circ_img = cv2.circle(circ_img, adjusted_center, radius + 10, (255, 255, 255), 2)  
+
+    # ==========================================================================
+
     # Perform ArUco marker detection periodically
     current_time = time.time()
     
@@ -118,20 +150,22 @@ while True:
     fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer)
     cv2.putText(img, f"FPS: {int(fps)}", (frame_width-220, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 255), 2)
     heatmap = cv2.applyColorMap(np.uint8(255 * output_heatmap), cv2.COLORMAP_JET)
-    overlay = cv2.addWeighted(img, 0.5, heatmap, 0.5, 0)
+    # overlay = cv2.addWeighted(img, 0.5, heatmap, 0.5, 0)
 
     # Display windows
     focus = 1
     cap.set(28, focus)
-    
-    img = cv2.resize(img, (1280, 720))
 
     # Scale all images to 480p
-    overlay = cv2.resize(overlay, (640, 480))
-    projection_MASK = cv2.resize(projection_MASK, (640, 480))
+    img = cv2.resize(img, (640, 480))
+    circ_img = cv2.resize(circ_img, (640, 480))
+    # overlay = cv2.resize(overlay, (640, 480))
+    # projection_MASK = cv2.resize(projection_MASK, (640, 480))
+    
     cv2.imshow('Original', img)
+    cv2.imshow('Circles', circ_img)
     # cv2.imshow('Overlay', overlay)
-    cv2.imshow('Original boxes', projection_MASK)
+    # cv2.imshow('Original boxes', projection_MASK)
 
     heatmap = cv2.applyColorMap(np.uint8(255 * output_heatmap), cv2.COLORMAP_JET)
     heatmap = cv2.resize(heatmap, (640, 480))
