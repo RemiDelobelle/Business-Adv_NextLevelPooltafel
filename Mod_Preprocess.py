@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from Mod_Constants import PRINTS, THRESHOLD_CONTOUR
+from Mod_Constants import PRINTS, PRINTS_DEBUG, THRESHOLD_CONTOUR
 
 def processImg(img, interpreter, input_details, output_details):
     image_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)

@@ -2,7 +2,7 @@
 import cv2
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor
-from Mod_Constants import PRINTS
+from Mod_Constants import PRINTS, PRINTS_DEBUG
 
 ARUCO_DICT = {
     "DICT_4X4_50": cv2.aruco.DICT_4X4_50,
@@ -63,7 +63,7 @@ def aruco_display(corners, ids, rejected, img, rect_in_frame):
         # Display count of detected markers
         cv2.putText(img, f"#Detected markers: {len(marker_centers)}", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
         print("IDs:", ids) if PRINTS else None
-        print("Marker centers:", marker_centers)
+        print("[DEBUG] Marker centers:", marker_centers) if PRINTS_DEBUG else None
         # print("IDs:", ids, type(ids))
 
         # Draw rectangles
@@ -74,7 +74,6 @@ def aruco_display(corners, ids, rejected, img, rect_in_frame):
 
         if rect_in_frame[0] and rect_in_frame[1]:
             print("[INFO] Both rectangles are in frame!") if PRINTS else None
-            both_marker_found = True
 
             middle_cX1, middle_cY1 = None, None
             middle_cX2, middle_cY2 = None, None
@@ -84,24 +83,24 @@ def aruco_display(corners, ids, rejected, img, rect_in_frame):
 
             for id, (cX, cY) in marker_centers:
                 if id == 4:
-                    middle_cX1 = cX
-                elif id == 0:
                     middle_cY1 = cY
+                elif id == 0:
+                    middle_cX1 = cX
                 elif id == 5:
-                    middle_cX2 = cX
-                elif id == 1:
                     middle_cY2 = cY
+                elif id == 1:
+                    middle_cX2 = cX
                 elif id == 6:
-                    middle_cX3 = cX
-                elif id == 2:
                     middle_cY3 = cY
+                elif id == 2:
+                    middle_cX3 = cX
                 elif id == 7:
-                    middle_cX4 = cX
-                elif id == 3:
                     middle_cY4 = cY
+                elif id == 3:
+                    middle_cX4 = cX
             
             middle_points = np.array([[middle_cX1, middle_cY1], [middle_cX2, middle_cY2], [middle_cX3, middle_cY3], [middle_cX4, middle_cY4]])
-            print(f"[INFO] Middle points: {middle_points}") 
+            print(f"Corners coor playfield: {middle_points}") if PRINTS else None
 
     return middle_points
 

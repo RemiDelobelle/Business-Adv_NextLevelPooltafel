@@ -51,10 +51,14 @@ input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
 # print("Output: ", output_details)
 
+current_middle_points = np.array([])
 last_middle_points = np.array([])
 prev_count_Balls = [0, 0]
 score = [0, 0]
 
+# Set interval for ArUco marker detection (in seconds)
+aruco_detection_interval = 5  # Example: detect ArUco markers every 5 seconds
+last_detection_time = time.time()
 
 while True:
     ret, clean_img = cap.read()
@@ -83,7 +87,7 @@ while True:
     mask_solidBalls = np.zeros_like(clean_img)
     coor_stripedBalls, coor_solidBalls = [], []
     # # PROBLEM: function takes too long to process
-    #mask_stripedBalls, mask_solidBalls, projection_MASK, coor_stripedBalls, coor_solidBalls = Mod_Bbox.process_bboxes(bbox_coor, clean_img, mask_stripedBalls, mask_solidBalls, projection_MASK, coor_stripedBalls, coor_solidBalls)
+    ### mask_stripedBalls, mask_solidBalls, projection_MASK, coor_stripedBalls, coor_solidBalls = Mod_Bbox.process_bboxes(bbox_coor, clean_img, mask_stripedBalls, mask_solidBalls, projection_MASK, coor_stripedBalls, coor_solidBalls)
     curr_count_Balls = [len(coor_stripedBalls), len(coor_solidBalls)]   # TODO: score
     if (curr_count_Balls != prev_count_Balls) and prev_count_Balls[0] is not None and prev_count_Balls[1] is not None:
         score[0] = curr_count_Balls[0] - prev_count_Balls[0]
@@ -93,17 +97,25 @@ while True:
     cv2.putText(img, f"#Solid balls: {curr_count_Balls[1]}", (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,255,0), 2)
     cv2.putText(img, f"Score: I:{score[0]} - O:{score[1]}", (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,255,0), 2)
 
-    # ArUco detection
-    detector = cv2.aruco.ArucoDetector(arucoDict, arucoParams)
-    corners, ids, rejected = detector.detectMarkers(img)
-    current_middle_points = Mod_ArUco.aruco_display(corners, ids, rejected, img, rect_in_frame)
-    if len(current_middle_points) > 0:
+    # Perform ArUco marker detection periodically
+    current_time = time.time()
+    
+    if current_time - last_detection_time >= aruco_detection_interval:
+        last_detection_time = current_time
+
+        # ArUco detection
+        detector = cv2.aruco.ArucoDetector(arucoDict, arucoParams)
+        corners, ids, rejected = detector.detectMarkers(img)
+        current_middle_points = Mod_ArUco.aruco_display(corners, ids, rejected, img, rect_in_frame)
+    if current_middle_points is not None and len(current_middle_points) > 0:
         last_middle_points = current_middle_points
-    if len(last_middle_points) > 0:
+
+    if last_middle_points is not None and len(last_middle_points) > 0:
         cv2.polylines(img, [last_middle_points], True, (255, 0, 255), 5)
         cv2.polylines(projection_MASK, [last_middle_points], True, (255, 0, 255), 5)
         # # PROBLEM: comment this line if you want to test fps problem
         ### cv2.polylines(mask_stripedBalls, [last_middle_points], True, (255, 0, 255), 5)
+
 
     # cv2 window settings
     fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer)
