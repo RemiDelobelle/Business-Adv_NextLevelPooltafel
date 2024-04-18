@@ -5,6 +5,8 @@ import time
 from shapely.geometry import Polygon, Point
 from concurrent.futures import ThreadPoolExecutor
 
+from PyQt5.QtWidgets import QDesktopWidget
+
 from Mod_Constants import BBOXSIZE, PRINTS, PRINTS_DEBUG
 import Mod_ArUco
 import Mod_Bbox
@@ -28,8 +30,8 @@ def run_tracking_module():
 
     rect_in_frame: bool = [False, False]
 
-    frame_width = 1920
-    frame_height = 1080
+    frame_width = 3840
+    frame_height = 2160
 
     path = "AiTracking_Module_Video\Dependencies\RealPool_Cutted2.mp4"
     cap = cv2.VideoCapture(path)
@@ -45,7 +47,7 @@ def run_tracking_module():
     score = [0, 0]
 
     # Calculate scaling factor
-    scaling_factor = 0.5
+    scaling_factor = 1
 
     # Set window names
     cv2.namedWindow('Original', cv2.WINDOW_NORMAL)
@@ -62,6 +64,10 @@ def run_tracking_module():
     # cv2.resizeWindow('Striped balls', window_width, window_height)
     # cv2.resizeWindow('Solid balls', window_width, window_height)
     # cv2.resizeWindow('Heatmap', window_width, window_height)
+    screen_geometry = QDesktopWidget().screenGeometry(1)
+    cv2.moveWindow('Original', screen_geometry.x(), screen_geometry.y())
+    cv2.setWindowProperty('Original', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
 
     while True:
         ret, clean_img = cap.read()
@@ -120,9 +126,11 @@ def run_tracking_module():
         # heatmap = cv2.applyColorMap(np.uint8(255 * output_heatmap), cv2.COLORMAP_JET)
         # cv2.imshow('Heatmap', heatmap)
 
+        
         if cv2.waitKey(1) & 0xFF == 27:
             break
 
     cv2.destroyAllWindows()
+    
     exit()
 
