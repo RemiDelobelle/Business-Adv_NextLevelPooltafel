@@ -30,6 +30,8 @@ rect_in_frame: bool = [False, False]
 
 frame_width = 1920
 frame_height = 1080
+
+# === FOR WEBCAM ===
 # cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 # cap.set(cv2.CAP_PROP_FRAME_WIDTH, frame_width)
 # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, frame_height)
@@ -84,20 +86,6 @@ while True:
 
     # Draw bounding boxes
     bbox_coor = Mod_Bbox.calc_bboxes(centers, last_middle_points, BBOXSIZE, img, projection_MASK, drawing=True)
-    # # print(f"[DEBUG] Bounding boxes: {bbox_coor}") if len(bbox_coor) and PRINTS_DEBUG > 0 else None
-    mask_stripedBalls = np.zeros_like(clean_img)
-    mask_solidBalls = np.zeros_like(clean_img)
-    coor_stripedBalls, coor_solidBalls = [], []
-    # # PROBLEM: function takes too long to process
-    ### mask_stripedBalls, mask_solidBalls, projection_MASK, coor_stripedBalls, coor_solidBalls = Mod_Bbox.process_bboxes(bbox_coor, clean_img, mask_stripedBalls, mask_solidBalls, projection_MASK, coor_stripedBalls, coor_solidBalls)
-    curr_count_Balls = [len(coor_stripedBalls), len(coor_solidBalls)]   # TODO: score
-    if (curr_count_Balls != prev_count_Balls) and prev_count_Balls[0] is not None and prev_count_Balls[1] is not None:
-        score[0] = curr_count_Balls[0] - prev_count_Balls[0]
-        score[1] = curr_count_Balls[1] - prev_count_Balls[1]
-        prev_count_Balls = curr_count_Balls
-    cv2.putText(img, f"#Striped balls: {curr_count_Balls[0]}", (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,255,0), 2)
-    cv2.putText(img, f"#Solid balls: {curr_count_Balls[1]}", (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,255,0), 2)
-    cv2.putText(img, f"Score: I:{score[0]} - O:{score[1]}", (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,255,0), 2)
 
     # Perform ArUco marker detection periodically
     current_time = time.time()
@@ -123,7 +111,7 @@ while True:
         cv2.polylines(img, [last_middle_points], True, (255, 0, 255), 5)
         cv2.polylines(projection_MASK, [last_middle_points], True, (255, 0, 255), 5)
         # # PROBLEM: comment this line if you want to test fps problem
-        ### cv2.polylines(mask_stripedBalls, [last_middle_points], True, (255, 0, 255), 5)
+        cv2.polylines(mask_stripedBalls, [last_middle_points], True, (255, 0, 255), 5)
 
 
     # cv2 window settings
@@ -136,22 +124,15 @@ while True:
     focus = 1
     cap.set(28, focus)
     
-    
     img = cv2.resize(img, (1280, 720))
 
     # Scale all images to 480p
     overlay = cv2.resize(overlay, (640, 480))
     projection_MASK = cv2.resize(projection_MASK, (640, 480))
-    mask_stripedBalls = cv2.resize(mask_stripedBalls, (640, 480))
-    mask_solidBalls = cv2.resize(mask_solidBalls, (640, 480))
     cv2.imshow('Original', img)
-    # cv2.imshow('Heatmap', heatmap)
     # cv2.imshow('Overlay', overlay)
     cv2.imshow('Original boxes', projection_MASK)
-    cv2.imshow('Striped balls', mask_stripedBalls)
-    cv2.imshow('Solid balls', mask_solidBalls)
 
-    
     heatmap = cv2.applyColorMap(np.uint8(255 * output_heatmap), cv2.COLORMAP_JET)
     heatmap = cv2.resize(heatmap, (640, 480))
     cv2.imshow('Heatmap', heatmap)
