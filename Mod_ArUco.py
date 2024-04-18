@@ -62,6 +62,7 @@ def aruco_display(corners, ids, rejected, img, rect_in_frame):
 
         # Display count of detected markers
         cv2.putText(img, f"#Detected markers: {len(marker_centers)}", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
+
         print("IDs:", ids) if PRINTS else None
         print("[DEBUG] Marker centers:", marker_centers) if PRINTS_DEBUG else None
         # print("IDs:", ids, type(ids))
@@ -101,8 +102,7 @@ def aruco_display(corners, ids, rejected, img, rect_in_frame):
             
             middle_points = np.array([[middle_cX1, middle_cY1], [middle_cX2, middle_cY2], [middle_cX3, middle_cY3], [middle_cX4, middle_cY4]])
             print(f"Corners coor playfield: {middle_points}") if PRINTS else None
-
-    return middle_points
+    return middle_points, marker_centers
 
 def draw_rectangle_markers(img, ids, marker_centers, values):
     mask = np.isin(values, [x[0] for x in marker_centers])

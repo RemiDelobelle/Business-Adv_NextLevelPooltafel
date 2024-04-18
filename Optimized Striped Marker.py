@@ -57,8 +57,10 @@ prev_count_Balls = [0, 0]
 score = [0, 0]
 
 # Set interval for ArUco marker detection (in seconds)
-aruco_detection_interval = 5  # Example: detect ArUco markers every 5 seconds
+aruco_detection_interval = 5  
+stop_time = 1
 last_detection_time = time.time()
+working = True
 
 while True:
     ret, clean_img = cap.read()
@@ -100,13 +102,20 @@ while True:
     # Perform ArUco marker detection periodically
     current_time = time.time()
     
-    if current_time - last_detection_time >= aruco_detection_interval:
-        last_detection_time = current_time
+    if current_time - last_detection_time >= aruco_detection_interval or working:
+        if not working:
+            last_detection_time = current_time
+            working = True
+        if current_time - last_detection_time >= stop_time:
+            working = False
 
         # ArUco detection
         detector = cv2.aruco.ArucoDetector(arucoDict, arucoParams)
         corners, ids, rejected = detector.detectMarkers(img)
-        current_middle_points = Mod_ArUco.aruco_display(corners, ids, rejected, img, rect_in_frame)
+        current_middle_points, marker_centers = Mod_ArUco.aruco_display(corners, ids, rejected, img, rect_in_frame)
+        if len(marker_centers) > 7:
+            working = False
+
     if current_middle_points is not None and len(current_middle_points) > 0:
         last_middle_points = current_middle_points
 
