@@ -4,6 +4,7 @@ from PyQt5.QtGui import QImage, QPixmap
 import cv2
 from mainwindow_ui import Ui_MainWindow
 from concurrent.futures import ThreadPoolExecutor
+from mainProgram import run_tracking_module
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -12,11 +13,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.setupUi(self)
 
         # slider
-        self.ui.Slider.valueChanged.connect(self.slider_changed)
-
-        # Button
-        self.ui.btn.clicked.connect(self.run_tracking)
-
+        self.ui.canny_thres_slider.valueChanged.connect(self.slider_changed)
+        self.ui.run_camera_feed_btn.clicked.connect(self.run_camera_feed)
+        self.ui.run_main_btn.clicked.connect(self.run_main)
+        
         # Create a thread pool executor
         self.executor = ThreadPoolExecutor(max_workers=1)
 
@@ -24,17 +24,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cap = cv2.VideoCapture(0)
         if not self.cap.isOpened():
             print("Failed to open camera")
-
-        # Create a label to display the video feed
         self.label = self.ui.label_Camera
+        
+        initial_value = self.ui.canny_thres_slider.value()
+        self.ui.canny_thres_label.setText(f"canny_thres: {initial_value}")
 
     # Slider reading
     def slider_changed(self, value):
-        self.ui.label.setText(f"Value: {value}")
+        self.ui.canny_thres_label.setText(f"canny_thres: {value}")
         # Submit the tracking function to the executor
-        self.executor.submit(self.run_tracking)
+        self.executor.submit(self.run_camera_feed)
 
-    def run_tracking(self):
+    def run_camera_feed(self):
+
         while True:
             ret, frame = self.cap.read()
             
@@ -59,6 +61,8 @@ class MainWindow(QtWidgets.QMainWindow):
             # Break the loop if the window is closed
             if not self.isVisible():
                 break
+    def run_main(self):
+        self.executor.submit(run_tracking_module(10))
 
     
 if __name__ == "__main__":
