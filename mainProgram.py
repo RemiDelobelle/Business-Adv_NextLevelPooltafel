@@ -46,11 +46,11 @@ def run_tracking_module(test):
     # focus = 1
     # cap.set(28, focus)
 
-    path = "AiTracking_Module_Video_Optimized\Dependencies\RealPool_Cut2.mp4"
+    path = "Dependencies\RealPool_Cutted2.mp4"
     cap = cv2.VideoCapture(path)
 
     # interpreter = tf.lite.Interpreter(model_path="Dependencies/V5_FOMO_FLOAT.lite")
-    interpreter = tf.lite.Interpreter(model_path="AiTracking_Module_Video_Optimized\Dependencies\V5_FOMO_FLOAT.lite")
+    interpreter = tf.lite.Interpreter(model_path="Dependencies\V5_FOMO_FLOAT.lite")
     interpreter.allocate_tensors()
 
     input_details = interpreter.get_input_details()
