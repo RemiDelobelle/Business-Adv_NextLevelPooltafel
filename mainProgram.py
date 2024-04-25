@@ -52,6 +52,7 @@ def run_tracking_module(test):
 
     # interpreter = tf.lite.Interpreter(model_path="Dependencies/V5_FOMO_FLOAT.lite")
     interpreter = tf.lite.Interpreter(model_path="Dependencies\V5_FOMO_FLOAT.lite")
+    interpreter = tf.lite.Interpreter(model_path="Dependencies\V5_FOMO_FLOAT.lite")
     interpreter.allocate_tensors()
 
     input_details = interpreter.get_input_details()
