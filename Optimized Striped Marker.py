@@ -92,9 +92,7 @@ while True:
     # Draw bounding boxes
     bbox_coor = Mod_Bbox.calc_bboxes(centers, last_middle_points, BBOXSIZE, img, projection_MASK, drawing=True)
 
-    # ==========================================================================
     circ_img = clean_img.copy()
-
     # Detect circles within bounding boxes
     for bbox in bbox_coor:
         xbox1, ybox1, xbox2, ybox2 = bbox
@@ -125,7 +123,6 @@ while True:
                         circ_img = cv2.circle(circ_img, adjusted_center, radius + 10, (255, 255, 255), 2)  
                         
                         # Average radius is 12-15
-    # ==========================================================================
 
     # Perform ArUco marker detection periodically
     current_time = time.time()
