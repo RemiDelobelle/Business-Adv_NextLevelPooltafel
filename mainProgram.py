@@ -14,7 +14,7 @@ import Mod_Preprocess
 import Mod_CueDetect
 
 def run_tracking_module(test):
-
+    print("mainprogram: ", test)
 # Allow memory growth on all GPUs
     gpus = tf.config.list_physical_devices('GPU')
     if gpus:
