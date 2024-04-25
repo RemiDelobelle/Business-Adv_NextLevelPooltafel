@@ -2,7 +2,7 @@
 import cv2
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor
-from Mod_Constants import PRINTS, PRINTS_DEBUG
+from Mod_Constants import PRINTS, PRINTS_DEBUG, MARGIN_POLYGON
 
 ARUCO_DICT = {
     "DICT_4X4_50": cv2.aruco.DICT_4X4_50,
@@ -62,6 +62,7 @@ def aruco_display(corners, ids, rejected, img, rect_in_frame):
 
         # Display count of detected markers
         cv2.putText(img, f"#Detected markers: {len(marker_centers)}", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
+
         print("IDs:", ids) if PRINTS else None
         print("[DEBUG] Marker centers:", marker_centers) if PRINTS_DEBUG else None
         # print("IDs:", ids, type(ids))
@@ -83,26 +84,25 @@ def aruco_display(corners, ids, rejected, img, rect_in_frame):
 
             for id, (cX, cY) in marker_centers:
                 if id == 4:
-                    middle_cY1 = cY
+                    middle_cY1 = cY + MARGIN_POLYGON
                 elif id == 0:
-                    middle_cX1 = cX
+                    middle_cX1 = cX + MARGIN_POLYGON
                 elif id == 5:
-                    middle_cY2 = cY
+                    middle_cY2 = cY + MARGIN_POLYGON
                 elif id == 1:
-                    middle_cX2 = cX
+                    middle_cX2 = cX - MARGIN_POLYGON
                 elif id == 6:
-                    middle_cY3 = cY
+                    middle_cY3 = cY - MARGIN_POLYGON
                 elif id == 2:
-                    middle_cX3 = cX
+                    middle_cX3 = cX - MARGIN_POLYGON
                 elif id == 7:
-                    middle_cY4 = cY
+                    middle_cY4 = cY - MARGIN_POLYGON
                 elif id == 3:
-                    middle_cX4 = cX
+                    middle_cX4 = cX + MARGIN_POLYGON
             
             middle_points = np.array([[middle_cX1, middle_cY1], [middle_cX2, middle_cY2], [middle_cX3, middle_cY3], [middle_cX4, middle_cY4]])
-            print(f"Corners coor playfield: {middle_points}") 
-
-    return middle_points
+            print(f"Corners coor playfield: {middle_points}") if PRINTS else None
+    return middle_points, marker_centers
 
 def draw_rectangle_markers(img, ids, marker_centers, values):
     mask = np.isin(values, [x[0] for x in marker_centers])

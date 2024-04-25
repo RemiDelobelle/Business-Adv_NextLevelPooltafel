@@ -1,18 +1,8 @@
-import numpy as np
 import sys
-from PyQt5 import QtWidgets
-
-from PyQt5.QtGui import QImage, QPixmap
 from PyQt5 import QtWidgets, QtCore
-from mainwindow_ui import Ui_MainWindow
-from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QVBoxLayout, QWidget, QLabel
-from PyQt5.QtCore import Qt, pyqtSignal
-from mainProgram import run_tracking_module
-
-import numpy as np
+from PyQt5.QtGui import QImage, QPixmap
 import cv2
-import tensorflow as tf
-from shapely.geometry import Polygon, Point
+from mainwindow_ui import Ui_MainWindow
 from concurrent.futures import ThreadPoolExecutor
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -20,57 +10,59 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.setup_second_window()
 
         # slider
         self.ui.Slider.valueChanged.connect(self.slider_changed)
-        screen = QDesktopWidget().screenGeometry(0)
-        self.setGeometry(screen)
-        self.showMaximized()
 
-        #Button
-        self.ui.btn.clicked.connect(run_tracking_module)
-    
-    def setup_second_window(self):
-        self.second_window = QtWidgets.QWidget()
-        self.second_layout = QVBoxLayout()
-        self.second_label = QLabel(self.second_window)
-        self.second_layout.addWidget(self.second_label)
-        self.second_window.setLayout(self.second_layout)
-        self.second_window.setWindowTitle("CV2 Window")
+        # Button
+        self.ui.btn.clicked.connect(self.run_tracking)
 
-        primary_screen_geometry = QDesktopWidget().screenGeometry(1)
-        self.second_window.setGeometry(primary_screen_geometry)
-        self.second_window.showFullScreen()
+        # Create a thread pool executor
+        self.executor = ThreadPoolExecutor(max_workers=1)
 
+        # Open the camera
+        self.cap = cv2.VideoCapture(0)
+        if not self.cap.isOpened():
+            print("Failed to open camera")
 
-        self.timer = QtCore.QTimer(self)
-        self.timer.timeout.connect(self.update_cv_window)
-        self.timer.start(30)
+        # Create a label to display the video feed
+        self.label = self.ui.label_Camera
 
-    def update_cv_window(self):
-        run_tracking_module()
-
-    def update_label_image(self, pixmap):
-        self.second_label.setPixmap(pixmap)
-        self.second_label.repaint()
-
-    # slider uitlezen
-    def slider_changed(self):
-        value = self.ui.Slider.value()
+    # Slider reading
+    def slider_changed(self, value):
         self.ui.label.setText(f"Value: {value}")
+        # Submit the tracking function to the executor
+        self.executor.submit(self.run_tracking)
 
-    # def run_tracking_and_display(self):
-    #     run_tracking_module()
-        # height, width, channel = img.shape
-        # bytesPerLine = 3 * width
-        # qImg = QImage(img.data, width, height, bytesPerLine, QImage.Format_RGB888).rgbSwapped()
-        # pixmap = QPixmap.fromImage(qImg)
-        # self.update_label_image(pixmap)
+    def run_tracking(self):
+        while True:
+            ret, frame = self.cap.read()
+            
+            if not ret:
+                print("Failed to grab frame")
+                break
 
+            rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            
+            # Convert to QImage
+            h, w, c = rgb_image.shape
+            q_img = QImage(rgb_image.data, w, h, 3 * w, QImage.Format_RGB888)
+            pixmap = QPixmap.fromImage(q_img)
+            self.label.setPixmap(pixmap)
+            
+            # Resize QLabel to fit the image
+            self.label.setScaledContents(True)
+            
+            # Update the UI
+            QtWidgets.QApplication.processEvents()
+            
+            # Break the loop if the window is closed
+            if not self.isVisible():
+                break
+
+    
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindow()
-    #window.run_tracking_and_display()  # Run tracking and display the image
-    window.show()
+    window.showMaximized()
     sys.exit(app.exec_())

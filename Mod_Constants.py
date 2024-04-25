@@ -5,3 +5,4 @@ THRESHOLD_CONTOUR = 0.6     # oude: 0.4
 BBOXSIZE = 25
 THRESHOLD_STRIPED_BALLS = 10.0  # Percentage of white in the bounding box
 MARGIN_STRIPED_BALLS = 10       # Margin to add to the percentage of white in the bounding box
+MARGIN_POLYGON = 50

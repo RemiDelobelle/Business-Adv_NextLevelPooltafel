@@ -45,6 +45,9 @@ class Ui_MainWindow(object):
         self.label.setGeometry(QtCore.QRect(130, 50, 151, 31))
         self.label.setStyleSheet("font: 16pt \"Calibri\";")
         self.label.setObjectName("label")
+        self.label_Camera = QtWidgets.QLabel(self.Developer1)
+        self.label_Camera.setGeometry(QtCore.QRect(80, 200, 480, 360))
+        self.label_Camera.setObjectName("label_Camera")
         self.Developer.addTab(self.Developer1, "")
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
@@ -54,7 +57,7 @@ class Ui_MainWindow(object):
         self.actionStandardMode.setObjectName("actionStandardMode")
 
         self.retranslateUi(MainWindow)
-        self.Developer.setCurrentIndex(0)
+        self.Developer.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -64,7 +67,16 @@ class Ui_MainWindow(object):
         self.btn.setText(_translate("MainWindow", "RUN"))
         self.Developer.setTabText(self.Developer.indexOf(self.Standard), _translate("MainWindow", "Standard"))
         self.label.setText(_translate("MainWindow", "SliderValue"))
+        self.label_Camera.setText(_translate("MainWindow", "Labelcamera"))
         self.Developer.setTabText(self.Developer.indexOf(self.Developer1), _translate("MainWindow", "Developer"))
         self.actionStandardMode.setText(_translate("MainWindow", "StandardMode"))
 
 
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    MainWindow = QtWidgets.QMainWindow()
+    ui = Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
+    sys.exit(app.exec_())
