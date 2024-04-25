@@ -4,6 +4,7 @@ from PyQt5.QtGui import QImage, QPixmap
 import cv2
 from mainwindow_ui import Ui_MainWindow
 from concurrent.futures import ThreadPoolExecutor
+import mainProgram
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -55,6 +56,8 @@ class MainWindow(QtWidgets.QMainWindow):
             
             # Update the UI
             QtWidgets.QApplication.processEvents()
+
+            mainProgram.run_tracking_module(10)
             
             # Break the loop if the window is closed
             if not self.isVisible():
