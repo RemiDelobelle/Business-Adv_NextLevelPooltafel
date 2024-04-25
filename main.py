@@ -40,7 +40,16 @@ class MainWindow(QtWidgets.QMainWindow):
             if not ret:
                 print("Failed to grab frame")
                 break
-
+            
+            # Convert the frame to QImage for unfiltered display
+            h, w, c = frame.shape
+            q_img_original = QImage(frame.data, w, h, 3 * w, QImage.Format_RGB888)
+            pixmap_original = QPixmap.fromImage(q_img_original)
+            
+            # Set the pixmap to the QLabel for unfiltered display
+            self.ui.label_Camera.setPixmap(pixmap_original)
+            self.ui.label_Camera.setScaledContents(True)
+            
             # Image processing
             imgBlur = cv2.GaussianBlur(frame, (7, 7), 1)
             imgGray = cv2.cvtColor(imgBlur, cv2.COLOR_BGR2GRAY)
@@ -48,21 +57,20 @@ class MainWindow(QtWidgets.QMainWindow):
                 imgCanny = cv2.Canny(imgGray, self.canny_thres, 0)
             except:
                 print("Error in Canny: ", self.canny_thres, type(self.canny_thres))
+            
             kernel = np.ones((5, 5), np.uint8)
             imgDil = cv2.dilate(imgCanny, kernel, iterations=1)
             
             rgb_image = cv2.cvtColor(imgDil, cv2.COLOR_GRAY2RGB)
             
-            # Convert to QImage
+            # Convert to QImage for processed display
             h, w, c = rgb_image.shape
             q_img = QImage(rgb_image.data, w, h, 3 * w, QImage.Format_RGB888)
             pixmap = QPixmap.fromImage(q_img)
             
-            # Set the pixmap to the QLabel
-            self.ui.label_Camera.setPixmap(pixmap)
-            
-            # Resize QLabel to fit the image
-            self.ui.label_Camera.setScaledContents(True)
+            # Set the pixmap to the QLabel for processed display
+            self.ui.label_Canny.setPixmap(pixmap)
+            self.ui.label_Canny.setScaledContents(True)
             
             # Update the UI
             QtWidgets.QApplication.processEvents()
@@ -71,6 +79,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if not self.isVisible():
                 break
 
+
     def run_main(self):
         self.executor.submit(mainProgram.run_tracking_module, self.canny_thres)
         print("Main program started with: ", self.canny_thres)
@@ -78,5 +87,5 @@ class MainWindow(QtWidgets.QMainWindow):
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindow()
-    window.showMaximized()
+    window.show()
     sys.exit(app.exec_())

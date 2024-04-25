@@ -13,8 +13,8 @@ import Mod_Bbox
 import Mod_Preprocess
 import Mod_CueDetect
 
-def run_tracking_module(test):
-    print("mainprogram: ", test)
+def run_tracking_module(canny_threshold1):
+    print("mainprogram: ", canny_threshold1) 
 # Allow memory growth on all GPUs
     gpus = tf.config.list_physical_devices('GPU')
     if gpus:
@@ -23,7 +23,6 @@ def run_tracking_module(test):
                 tf.config.experimental.set_memory_growth(gpu, True)
         except RuntimeError as e:
             print(e)
-
 
     aruco_type = "DICT_4X4_50"
     arucoDict = cv2.aruco.getPredefinedDictionary(Mod_ArUco.ARUCO_DICT[aruco_type])
@@ -47,7 +46,7 @@ def run_tracking_module(test):
     focus = 1
     cap.set(28, focus)
 
-    # path = "Dependencies\RealPool_Cut2.mp4"
+    # path = "Dependencies\RealPool_Cutted2.mp4"
     # cap = cv2.VideoCapture(path)
 
     # interpreter = tf.lite.Interpreter(model_path="Dependencies/V5_FOMO_FLOAT.lite")
@@ -61,7 +60,7 @@ def run_tracking_module(test):
 
     current_middle_points = np.array([])
     last_middle_points = np.array([])
-    cue_polygon = np.array([])
+    cue_polygon = np.array([[0,0],[0,0],[0,0],[0,0]])
     prev_count_Balls = [0, 0]
     score = [0, 0]
 
@@ -144,10 +143,10 @@ def run_tracking_module(test):
                     imgBlur = cv2.GaussianBlur(roi, (7, 7), 1)
                     roi_gray = cv2.cvtColor(imgBlur, cv2.COLOR_BGR2GRAY)
 
-                    threshold1 = 500
+                    #threshold1 = 500
                     threshold2 = 0
                     minLineLength = 50
-                    imgCanny = cv2.Canny(roi_gray, threshold1, threshold2)
+                    imgCanny = cv2.Canny(roi_gray, canny_threshold1, threshold2)
                     kernel = np.ones((5, 5))
                     imgDil = cv2.dilate(imgCanny, kernel, iterations=1)
 
@@ -191,9 +190,9 @@ def run_tracking_module(test):
 
         # Set the 'Original' window to fullscreen on the second screen
         screen_geometry = QDesktopWidget().screenGeometry(0)
-        cv2.moveWindow('Original', screen_geometry.x(), screen_geometry.y())
+        #cv2.moveWindow('Original', screen_geometry.x(), screen_geometry.y())
         cv2.resizeWindow('Original', screen_geometry.width(), screen_geometry.height())  # Resize to screen resolution
-        cv2.setWindowProperty('Original', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        #cv2.setWindowProperty('Original', cv2.WINDOW_NORMAL, cv2.WINDOW_NORMAL)
 
 
 
@@ -212,7 +211,7 @@ def run_tracking_module(test):
         # Scale all images to 480p
         overlay = cv2.resize(overlay, (640, 480))
         projection_MASK = cv2.resize(projection_MASK, (640, 480))
-        cv2.imshow('Original', img)
+        #cv2.imshow('Original', img)
         cv2.imshow('Overlay', overlay)
         cv2.imshow('Original boxes', projection_MASK)
 
