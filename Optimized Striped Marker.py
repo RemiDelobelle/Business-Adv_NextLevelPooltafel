@@ -124,8 +124,6 @@ while True:
                         cv2.circle(projection_MASK, adjusted_center, radius, (0, 255, 0), 2)  
                         circ_img = cv2.circle(circ_img, adjusted_center, radius + 10, (255, 255, 255), 2)  
                         
-                        all_circles.append([adjusted_center, radius])
-                        avg_radius = sum([item[1] for item in all_circles]) / len(all_circles)
                         # Average radius is 12-15
     # ==========================================================================
 
@@ -154,33 +152,6 @@ while True:
     if last_middle_points is not None and len(last_middle_points) > 0:
         cv2.polylines(img, [last_middle_points], True, (255, 0, 255), 5)
         cv2.polylines(projection_MASK, [last_middle_points], True, (255, 0, 255), 5)
-
-    # # ==========================================================================
-    # # detect all circles inside the polygon 
-    # if last_middle_points is not None and len(last_middle_points) > 0:
-    #     polygon = Polygon(last_middle_points)
-
-    #     x_min, y_min, x_max, y_max = polygon.bounds
-    #     roi_x = int(x_min)
-    #     roi_y = int(y_min)
-    #     roi_width = int(x_max - x_min)
-    #     roi_height = int(y_max - y_min)
-
-    #     gray_roi = cv2.cvtColor(clean_img.copy(), cv2.COLOR_BGR2GRAY)
-    #     roi = gray_roi[roi_y:roi_y+roi_height, roi_x:roi_x+roi_width]
-
-    #     circles_new = cv2.HoughCircles(roi, cv2.HOUGH_GRADIENT, dp=1, minDist=10, param1=40, param2=20, minRadius=12, maxRadius=15)
-
-    #     # Draw circles on circle_img in pink
-    #     if circles_new is not None:
-    #         circles_new = np.uint16(np.around(circles_new))
-    #         for circle in circles_new[0, :]:
-    #             center = (circle[0] + roi_x, circle[1] + roi_y) 
-    #             radius = circle[2]
-    #             cv2.circle(circ_img, center, radius + 10, (255, 255, 255), 2)
-    
-
-    # # ==========================================================================
 
     # cv2 window settings
     fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer)
