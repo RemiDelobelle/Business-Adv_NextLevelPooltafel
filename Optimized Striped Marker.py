@@ -132,9 +132,11 @@ while True:
         # ArUco detection
         detector = cv2.aruco.ArucoDetector(arucoDict, arucoParams)
         corners, ids, rejected = detector.detectMarkers(img)
-        current_middle_points, marker_centers = Mod_ArUco.aruco_display(corners, ids, rejected, img, rect_in_frame)
-        if len(marker_centers) > 7:
-            working = False
+        result = Mod_ArUco.aruco_display(corners, ids, rejected, img, rect_in_frame)
+        if result is not None:
+            current_middle_points, marker_centers = result
+            if len(marker_centers) > 7 :
+                working = False
 
     if current_middle_points is not None and len(current_middle_points) > 0:
         last_middle_points = current_middle_points

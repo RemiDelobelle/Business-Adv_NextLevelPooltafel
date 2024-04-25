@@ -102,7 +102,8 @@ def aruco_display(corners, ids, rejected, img, rect_in_frame):
             
             middle_points = np.array([[middle_cX1, middle_cY1], [middle_cX2, middle_cY2], [middle_cX3, middle_cY3], [middle_cX4, middle_cY4]])
             print(f"Corners coor playfield: {middle_points}") if PRINTS else None
-    return middle_points, marker_centers
+            if marker_centers is not None:
+                return middle_points, marker_centers
 
 def draw_rectangle_markers(img, ids, marker_centers, values):
     mask = np.isin(values, [x[0] for x in marker_centers])
