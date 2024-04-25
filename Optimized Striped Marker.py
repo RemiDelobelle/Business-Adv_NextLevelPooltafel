@@ -64,6 +64,12 @@ stop_time = 1
 last_detection_time = time.time()
 working = True
 
+# Variables for extra circle detection
+min_circle_radius = 12.5
+min_radius_difference = 5
+avg_radius = 0
+all_circles = []
+
 while True:
     ret, clean_img = cap.read()
     timer = cv2.getTickCount()
@@ -75,7 +81,6 @@ while True:
         exit()
 
     img = clean_img.copy()
-    mask_stripedBalls = np.zeros_like(clean_img)
     projection_MASK = np.zeros_like(clean_img)
 
     # Preprocess image + get contours from model
@@ -90,33 +95,38 @@ while True:
     # ==========================================================================
     circ_img = clean_img.copy()
 
-    # Define the minimum size of circle (minimum radius)
-    min_circle_radius = 10  # Adjust this value as needed
-
     # Detect circles within bounding boxes
     for bbox in bbox_coor:
         xbox1, ybox1, xbox2, ybox2 = bbox
         roi = clean_img[ybox1:ybox2, xbox1:xbox2]
         gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-        _, thresh = cv2.threshold(gray_roi, 50, 255, cv2.THRESH_BINARY)  # Adjust the threshold value as needed
+        _, thresh = cv2.threshold(gray_roi, 50, 255, cv2.THRESH_BINARY) 
 
-        # Detect circles using Hough Circle Transform
         circles = cv2.HoughCircles(gray_roi, cv2.HOUGH_GRADIENT, dp=1, minDist=20, param1=50, param2=30, minRadius=5, maxRadius=30)
+
+        # Margin to check if the center is already present in all_circles
+        margin = 5 
 
         if circles is not None:
             circles = np.uint16(np.around(circles))
             for circle in circles[0, :]:
                 center = (circle[0], circle[1])
                 radius = circle[2]
-                
-                if radius >= min_circle_radius:
-                    # Adjust circle center coordinates based on bounding box coordinates
-                    adjusted_center = (center[0] + xbox1, center[1] + ybox1)
-                    
-                    cv2.circle(img, adjusted_center, radius, (0, 255, 0), 2) 
-                    cv2.circle(projection_MASK, adjusted_center, radius, (0, 255, 0), 2)  
-                    circ_img = cv2.circle(circ_img, adjusted_center, radius + 10, (255, 255, 255), 2)  
 
+                # Check if the center is already in all_circles within the margin
+                center_already_present = any(abs(center[0] - item[0][0]) < margin and abs(center[1] - item[0][1]) < margin for item in all_circles)
+
+                if not center_already_present:
+                    if radius >= min_circle_radius:
+                        adjusted_center = (center[0] + xbox1, center[1] + ybox1)
+                        
+                        cv2.circle(img, adjusted_center, radius, (0, 255, 0), 2) 
+                        cv2.circle(projection_MASK, adjusted_center, radius, (0, 255, 0), 2)  
+                        circ_img = cv2.circle(circ_img, adjusted_center, radius + 10, (255, 255, 255), 2)  
+                        
+                        all_circles.append([adjusted_center, radius])
+                        avg_radius = sum([item[1] for item in all_circles]) / len(all_circles)
+                        # Average radius is 12-15
     # ==========================================================================
 
     # Perform ArUco marker detection periodically
@@ -144,9 +154,33 @@ while True:
     if last_middle_points is not None and len(last_middle_points) > 0:
         cv2.polylines(img, [last_middle_points], True, (255, 0, 255), 5)
         cv2.polylines(projection_MASK, [last_middle_points], True, (255, 0, 255), 5)
-        # # PROBLEM: comment this line if you want to test fps problem
-        cv2.polylines(mask_stripedBalls, [last_middle_points], True, (255, 0, 255), 5)
 
+    # # ==========================================================================
+    # # detect all circles inside the polygon 
+    # if last_middle_points is not None and len(last_middle_points) > 0:
+    #     polygon = Polygon(last_middle_points)
+
+    #     x_min, y_min, x_max, y_max = polygon.bounds
+    #     roi_x = int(x_min)
+    #     roi_y = int(y_min)
+    #     roi_width = int(x_max - x_min)
+    #     roi_height = int(y_max - y_min)
+
+    #     gray_roi = cv2.cvtColor(clean_img.copy(), cv2.COLOR_BGR2GRAY)
+    #     roi = gray_roi[roi_y:roi_y+roi_height, roi_x:roi_x+roi_width]
+
+    #     circles_new = cv2.HoughCircles(roi, cv2.HOUGH_GRADIENT, dp=1, minDist=10, param1=40, param2=20, minRadius=12, maxRadius=15)
+
+    #     # Draw circles on circle_img in pink
+    #     if circles_new is not None:
+    #         circles_new = np.uint16(np.around(circles_new))
+    #         for circle in circles_new[0, :]:
+    #             center = (circle[0] + roi_x, circle[1] + roi_y) 
+    #             radius = circle[2]
+    #             cv2.circle(circ_img, center, radius + 10, (255, 255, 255), 2)
+    
+
+    # # ==========================================================================
 
     # cv2 window settings
     fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer)
