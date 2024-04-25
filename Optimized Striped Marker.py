@@ -81,10 +81,10 @@ while True:
         exit()
 
     img = clean_img.copy()
-    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    hsv[:, :, 0] += 9
-    img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
-    img = cv2.convertScaleAbs(img, alpha=1, beta=0)
+    # hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    # hsv[:, :, 0] += 9
+    # img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+    # img = cv2.convertScaleAbs(img, alpha=1, beta=0)
     projection_MASK = np.zeros_like(clean_img)
 
     # Preprocess image + get contours from model
@@ -101,6 +101,12 @@ while True:
     for bbox in bbox_coor:
         xbox1, ybox1, xbox2, ybox2 = bbox
         roi = clean_img[ybox1:ybox2, xbox1:xbox2]
+
+        hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+        hsv[:, :, 0] += 9
+
+        roi = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+        roi = cv2.convertScaleAbs(roi, alpha=1, beta=0)
         gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
         _, thresh = cv2.threshold(gray_roi, 50, 255, cv2.THRESH_BINARY) 
 
