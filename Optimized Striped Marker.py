@@ -33,18 +33,18 @@ frame_width = 1920
 frame_height = 1080
 
 # === FOR WEBCAM ===
-# cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-# cap.set(cv2.CAP_PROP_FRAME_WIDTH, frame_width)
-# cap.set(cv2.CAP_PROP_FRAME_HEIGHT, frame_height)
-# cap.set(cv2.CAP_PROP_FPS, 60)
-# cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, frame_width)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, frame_height)
+cap.set(cv2.CAP_PROP_FPS, 60)
+cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
 
-# #Run HP Webcam software to autofocus
-# focus = 1
-# cap.set(28, focus)
+#Run HP Webcam software to autofocus
+focus = 1
+cap.set(28, focus)
 
-path = "Dependencies/RealPool_Cut2.mp4"
-cap = cv2.VideoCapture(path)
+# path = "Dependencies/RealPool_Cut2.mp4"
+# cap = cv2.VideoCapture(path)
 
 # interpreter = tf.lite.Interpreter(model_path="Dependencies/V5_FOMO_FLOAT.lite")
 interpreter = tf.lite.Interpreter(model_path="Dependencies/V5_FOMO_FLOAT.lite")
@@ -67,7 +67,7 @@ working = True
 
 # Variables for extra circle detection
 min_circle_radius = 12.5
-min_radius_difference = 5
+min_radius_difference = 10
 avg_radius = 0
 
 buffer_size = 50
@@ -84,6 +84,10 @@ while True:
         exit()
 
     img = clean_img.copy()
+    # hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    # hsv[:, :, 0] += 9
+    # img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+    # img = cv2.convertScaleAbs(img, alpha=1, beta=0)
     projection_MASK = np.zeros_like(clean_img)
 
     # Preprocess image + get contours from model
@@ -100,10 +104,16 @@ while True:
     for bbox in bbox_coor:
         xbox1, ybox1, xbox2, ybox2 = bbox
         roi = clean_img[ybox1:ybox2, xbox1:xbox2]
+
+        hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+        hsv[:, :, 0] += 9
+
+        roi = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+        roi = cv2.convertScaleAbs(roi, alpha=1, beta=0)
         gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
         _, thresh = cv2.threshold(gray_roi, 50, 255, cv2.THRESH_BINARY) 
 
-        circles = cv2.HoughCircles(gray_roi, cv2.HOUGH_GRADIENT, dp=1, minDist=20, param1=50, param2=30, minRadius=5, maxRadius=30)
+        circles = cv2.HoughCircles(gray_roi, cv2.HOUGH_GRADIENT, dp=1, minDist=20, param1=40, param2=20, minRadius=5, maxRadius=30)
 
         # Margin to check if the center is already present in all_circles
         margin = 10
@@ -162,8 +172,8 @@ while True:
     cap.set(28, focus)
 
     # Scale all images to 480p
-    img = cv2.resize(img, (640, 480))
-    circ_img = cv2.resize(circ_img, (640, 480))
+    img = cv2.resize(img, (1920, 1080))
+    circ_img = cv2.resize(circ_img, (1920, 1080))
     # overlay = cv2.resize(overlay, (640, 480))
     # projection_MASK = cv2.resize(projection_MASK, (640, 480))
     
@@ -173,7 +183,7 @@ while True:
     # cv2.imshow('Original boxes', projection_MASK)
 
     heatmap = cv2.applyColorMap(np.uint8(255 * output_heatmap), cv2.COLORMAP_JET)
-    heatmap = cv2.resize(heatmap, (640, 480))
+    heatmap = cv2.resize(heatmap, (1920, 1080))
     cv2.imshow('Heatmap', heatmap)
     if cv2.waitKey(1) & 0xFF == 27:
         break
