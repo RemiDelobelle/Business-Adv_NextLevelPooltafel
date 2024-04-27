@@ -5,7 +5,7 @@ from PyQt5.QtGui import QImage, QPixmap
 import cv2
 from mainwindow_ui import Ui_MainWindow
 from concurrent.futures import ThreadPoolExecutor
-import mainProgram
+import mainProgram 
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -15,19 +15,25 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Create a thread pool executor
         self.executor = ThreadPoolExecutor(max_workers=1)
-
+        print(">>> Created thread pool executor")
         # Connect signals and slots
         self.ui.canny_thres_slider.valueChanged.connect(self.slider_changed)
         self.ui.run_camera_feed_btn.clicked.connect(self.run_camera_feed)
         self.ui.run_main_btn.clicked.connect(self.run_main)
+        print(">>> Connected signals and slots")
 
         # Open the camera
-        self.cap = cv2.VideoCapture(0)
-        if not self.cap.isOpened():
-            print("Failed to open camera")
+        try:
+            self.cap = cv2.VideoCapture(1)
+            if not self.cap.isOpened():
+                print("Failed to open camera")
+        except:
+            print("[ERROR] Failed to open camera")
+            exit(1)
 
         # Set initial slider value
         self.slider_changed(500)
+        
 
     def slider_changed(self, value):
         self.ui.canny_thres_label.setText(f"canny_thres: {value}")
@@ -81,8 +87,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
     def run_main(self):
-        self.executor.submit(mainProgram.run_tracking_module, self.canny_thres)
-        print("Main program started with: ", self.canny_thres)
+        try:
+            self.executor.submit(mainProgram.run_tracking_module, self.canny_thres)
+            print("Tried starting main program with: ", self.canny_thres)
+        except:
+            print("Error in running main program")     
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

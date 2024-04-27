@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from Mod_Constants import PRINTS_DEBUG
 
 def findCue(imgDil, min_line_length, img_with_lines):
     lines = cv2.HoughLinesP(imgDil, 1, np.pi/180, 100, minLineLength=min_line_length)
@@ -23,7 +24,7 @@ def findCue(imgDil, min_line_length, img_with_lines):
             dominant_line = dominant_line[0]
 
             # Print dominant line for investigation
-            print("Dominant line:", dominant_line)
+            print("Dominant line:", dominant_line) if PRINTS_DEBUG else None
 
             # Check if the dominant line is in correct format
             if len(dominant_line) == 4:
@@ -32,13 +33,13 @@ def findCue(imgDil, min_line_length, img_with_lines):
                 cv2.line(img_with_lines, (x1, y1), (x2, y2), (0, 255, 0), 3)
                 return (x1, y1, x2, y2)
             else:
-                print("Dominant line format is not as expected.")
+                print("Dominant line format is not as expected.") if PRINTS_DEBUG else None
                 return None, None, None, None
         else:
-            print("No dominant line found.")
+            print("No dominant line found.") if PRINTS_DEBUG else None
             return None, None, None, None
     else:
-        print("No lines found.")
+        print("No lines found.") if PRINTS_DEBUG else None
         return None, None, None, None
 
 

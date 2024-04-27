@@ -12,10 +12,11 @@ import Mod_ArUco
 import Mod_Bbox
 import Mod_Preprocess
 import Mod_CueDetect
+from Mod_CircBuff import CircularBuffer
 
 def run_tracking_module(canny_threshold1):
-    print("mainprogram: ", canny_threshold1) 
-# Allow memory growth on all GPUs
+    print("run_tracking_module called with canny_threshold1:", canny_threshold1)
+    # Allow memory growth on all GPUs
     gpus = tf.config.list_physical_devices('GPU')
     if gpus:
         try:
@@ -36,21 +37,19 @@ def run_tracking_module(canny_threshold1):
     frame_height = 1080
 
     # === FOR WEBCAM ===
-    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, frame_width)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, frame_height)
-    cap.set(cv2.CAP_PROP_FPS, 60)
-    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+    # cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    # cap.set(cv2.CAP_PROP_FRAME_WIDTH, frame_width)
+    # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, frame_height)
+    # cap.set(cv2.CAP_PROP_FPS, 60)
+    # cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
 
-    # Run HP Webcam software to autofocus
-    focus = 1
-    cap.set(28, focus)
+    # # Run HP Webcam software to autofocus
+    # focus = 1
+    # cap.set(28, focus)
 
-    # path = "Dependencies\RealPool_Cutted2.mp4"
-    # cap = cv2.VideoCapture(path)
+    path = "Dependencies\RealPool_Cut2.mp4"
+    cap = cv2.VideoCapture(path)
 
-    # interpreter = tf.lite.Interpreter(model_path="Dependencies/V5_FOMO_FLOAT.lite")
-    interpreter = tf.lite.Interpreter(model_path="Dependencies\V5_FOMO_FLOAT.lite")
     interpreter = tf.lite.Interpreter(model_path="Dependencies\V5_FOMO_FLOAT.lite")
     interpreter.allocate_tensors()
 
@@ -70,6 +69,14 @@ def run_tracking_module(canny_threshold1):
     last_detection_time = time.time()
     working = True
 
+    # Variables for extra circle detection
+    min_circle_radius = 12.5
+    min_radius_difference = 10
+    avg_radius = 0
+
+    buffer_size = 50
+    ball_buffer = CircularBuffer(buffer_size)
+
     while True:
         ret, clean_img = cap.read()
         timer = cv2.getTickCount()
@@ -87,6 +94,8 @@ def run_tracking_module(canny_threshold1):
         img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
         img = cv2.convertScaleAbs(img, alpha=contrast, beta=0)
 
+        circ_img = clean_img.copy()
+
         mask_stripedBalls = np.zeros_like(clean_img)
         projection_MASK = np.zeros_like(clean_img)
 
@@ -98,6 +107,41 @@ def run_tracking_module(canny_threshold1):
 
         # Draw bounding boxes
         bbox_coor = Mod_Bbox.calc_bboxes(centers, last_middle_points, BBOXSIZE, img, projection_MASK, drawing=True)
+
+        # Detect circles within bounding boxes
+        for bbox in bbox_coor:
+            xbox1, ybox1, xbox2, ybox2 = bbox
+            roi = clean_img[ybox1:ybox2, xbox1:xbox2]
+
+            hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+            hsv[:, :, 0] += 9
+
+            roi = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+            roi = cv2.convertScaleAbs(roi, alpha=1, beta=0)
+            gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+            _, thresh = cv2.threshold(gray_roi, 50, 255, cv2.THRESH_BINARY) 
+
+            circles = cv2.HoughCircles(gray_roi, cv2.HOUGH_GRADIENT, dp=1, minDist=20, param1=40, param2=20, minRadius=5, maxRadius=30)
+
+            # Margin to check if the center is already present in all_circles
+            margin = 10
+
+            if circles is not None:
+                circles = np.uint16(np.around(circles))
+                for circle in circles[0, :]:
+                    center = (circle[0], circle[1])
+                    radius = circle[2]
+
+                if not ball_buffer.exists_within_margin(center, margin): 
+                    if radius >= min_circle_radius:
+                        adjusted_center = (center[0] + xbox1, center[1] + ybox1)
+                        
+                        # cv2.circle(img, adjusted_center, radius, (0, 255, 0), 2) 
+                        # cv2.circle(projection_MASK, adjusted_center, radius, (0, 255, 0), 2)  
+                        circ_img = cv2.circle(circ_img, adjusted_center, radius + 10, (255, 255, 255), 2)  
+                        ball_buffer.add(adjusted_center)
+                        # print(f"{ball_buffer.get()} \n\r")
+                        # Average radius is 12-15
 
         # Perform ArUco marker detection periodically
         current_time = time.time()
@@ -130,7 +174,7 @@ def run_tracking_module(canny_threshold1):
 
 
         if CUE_DETECTION:
-            print("Cue polygon", cue_polygon)
+            print("Cue polygon", cue_polygon) if PRINTS_DEBUG else None
             x, y, w, h = cv2.boundingRect(cue_polygon)
             x1_roi, y1_roi, x2_roi, y2_roi = x, y, x + w, y + h
             cv2.polylines(img, [cue_polygon], isClosed=True, color=(255, 0, 255), thickness=2)
@@ -181,10 +225,6 @@ def run_tracking_module(canny_threshold1):
                     cv2.imshow("Cue lines", img_cueLines)
         
 
-
-
-
-        
         # Display the 'Original' window
         cv2.imshow('Original', img)
 
@@ -199,6 +239,7 @@ def run_tracking_module(canny_threshold1):
         # cv2 window settings
         fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer)
         cv2.putText(img, f"FPS: {int(fps)}", (frame_width-220, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 255), 2)
+        cv2.putText(circ_img, f"FPS: {int(fps)}", (screen_geometry.width()-220, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 255), 2)
         heatmap = cv2.applyColorMap(np.uint8(255 * output_heatmap), cv2.COLORMAP_JET)
         overlay = cv2.addWeighted(img, 0.5, heatmap, 0.5, 0)
 
@@ -207,17 +248,19 @@ def run_tracking_module(canny_threshold1):
         cap.set(28, focus)
         
         img = cv2.resize(img, (1280, 720))
+        circ_img = cv2.resize(circ_img, (1280, 720))
 
         # Scale all images to 480p
         overlay = cv2.resize(overlay, (640, 480))
         projection_MASK = cv2.resize(projection_MASK, (640, 480))
         #cv2.imshow('Original', img)
-        cv2.imshow('Overlay', overlay)
-        cv2.imshow('Original boxes', projection_MASK)
+        # cv2.imshow('Overlay', overlay)
+        # cv2.imshow('Original boxes', projection_MASK)
+        cv2.imshow('Circles', circ_img)
 
         heatmap = cv2.applyColorMap(np.uint8(255 * output_heatmap), cv2.COLORMAP_JET)
         heatmap = cv2.resize(heatmap, (640, 480))
-        cv2.imshow('Heatmap', heatmap)
+        # cv2.imshow('Heatmap', heatmap)
         if cv2.waitKey(1) & 0xFF == 27:
             break
 
