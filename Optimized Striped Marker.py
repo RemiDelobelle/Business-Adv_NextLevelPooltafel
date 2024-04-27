@@ -9,6 +9,7 @@ from Mod_Constants import BBOXSIZE, PRINTS, PRINTS_DEBUG
 import Mod_ArUco
 import Mod_Bbox
 import Mod_Preprocess
+from Mod_CircBuff import CircularBuffer
 
 # Allow memory growth on all GPUs
 gpus = tf.config.list_physical_devices('GPU')
@@ -68,7 +69,9 @@ working = True
 min_circle_radius = 12.5
 min_radius_difference = 5
 avg_radius = 0
-all_circles = []
+
+buffer_size = 50
+ball_buffer = CircularBuffer(buffer_size)
 
 while True:
     ret, clean_img = cap.read()
@@ -103,7 +106,7 @@ while True:
         circles = cv2.HoughCircles(gray_roi, cv2.HOUGH_GRADIENT, dp=1, minDist=20, param1=50, param2=30, minRadius=5, maxRadius=30)
 
         # Margin to check if the center is already present in all_circles
-        margin = 5 
+        margin = 10
 
         if circles is not None:
             circles = np.uint16(np.around(circles))
@@ -111,18 +114,16 @@ while True:
                 center = (circle[0], circle[1])
                 radius = circle[2]
 
-                # Check if the center is already in all_circles within the margin
-                center_already_present = any(abs(center[0] - item[0][0]) < margin and abs(center[1] - item[0][1]) < margin for item in all_circles)
-
-                if not center_already_present:
-                    if radius >= min_circle_radius:
-                        adjusted_center = (center[0] + xbox1, center[1] + ybox1)
-                        
-                        cv2.circle(img, adjusted_center, radius, (0, 255, 0), 2) 
-                        cv2.circle(projection_MASK, adjusted_center, radius, (0, 255, 0), 2)  
-                        circ_img = cv2.circle(circ_img, adjusted_center, radius + 10, (255, 255, 255), 2)  
-                        
-                        # Average radius is 12-15
+            if not ball_buffer.exists_within_margin(center, margin): 
+                if radius >= min_circle_radius:
+                    adjusted_center = (center[0] + xbox1, center[1] + ybox1)
+                    
+                    # cv2.circle(img, adjusted_center, radius, (0, 255, 0), 2) 
+                    # cv2.circle(projection_MASK, adjusted_center, radius, (0, 255, 0), 2)  
+                    circ_img = cv2.circle(circ_img, adjusted_center, radius + 10, (255, 255, 255), 2)  
+                    ball_buffer.add(adjusted_center)
+                    # print(f"{ball_buffer.get()} \n\r")
+                    # Average radius is 12-15
 
     # Perform ArUco marker detection periodically
     current_time = time.time()
