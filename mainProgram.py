@@ -136,12 +136,9 @@ def run_tracking_module(canny_threshold1):
                     if radius >= min_circle_radius:
                         adjusted_center = (center[0] + xbox1, center[1] + ybox1)
                         
-                        # cv2.circle(img, adjusted_center, radius, (0, 255, 0), 2) 
-                        # cv2.circle(projection_MASK, adjusted_center, radius, (0, 255, 0), 2)  
+                        cv2.circle(img, adjusted_center, radius, (0, 255, 0), 2) 
                         circ_img = cv2.circle(circ_img, adjusted_center, radius + 10, (255, 255, 255), 2)  
                         ball_buffer.add(adjusted_center)
-                        # print(f"{ball_buffer.get()} \n\r")
-                        # Average radius is 12-15
 
         # Perform ArUco marker detection periodically
         current_time = time.time()
