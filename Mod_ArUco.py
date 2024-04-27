@@ -2,7 +2,7 @@
 import cv2
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor
-from Mod_Constants import PRINTS, PRINTS_DEBUG, MARGIN_POLYGON_OUT, MARGIN_POLYGON_IN
+from Mod_Constants import PRINTS, PRINTS_DEBUG, MARGIN_POLYGON
 
 ARUCO_DICT = {
     "DICT_4X4_50": cv2.aruco.DICT_4X4_50,
@@ -31,10 +31,9 @@ ARUCO_DICT = {
 def aruco_display(corners, ids, rejected, img, rect_in_frame):
     middle_points = np.array([])
     cue_polygon = np.array([])
-    marker_centers = []
     if len(corners) > 0:
         ids = ids.flatten()
-        
+        marker_centers = []
 
         for (markerCorner, markerID) in zip(corners, ids):
             corners = markerCorner.reshape((4, 2))
@@ -90,39 +89,34 @@ def aruco_display(corners, ids, rejected, img, rect_in_frame):
 
             for id, (cX, cY) in marker_centers:
                 if id == 4:
-                    outer_cY1 = cY + MARGIN_POLYGON_OUT
-                    middle_cX1 = cX - MARGIN_POLYGON_IN
+                    outer_cY1 = cY + MARGIN_POLYGON
+                    middle_cX1 = cX
                 elif id == 0:
-                    outer_cX1 = cX + MARGIN_POLYGON_OUT
-                    middle_cY1 = cY - MARGIN_POLYGON_IN
+                    outer_cX1 = cX + MARGIN_POLYGON
+                    middle_cY1 = cY
                 elif id == 5:
-                    outer_cY2 = cY + MARGIN_POLYGON_OUT
-                    middle_cX2 = cX + MARGIN_POLYGON_IN
+                    outer_cY2 = cY + MARGIN_POLYGON
+                    middle_cX2 = cX
                 elif id == 1:
-                    outer_cX2 = cX - MARGIN_POLYGON_OUT
-                    middle_cY2 = cY - MARGIN_POLYGON_IN
+                    outer_cX2 = cX - MARGIN_POLYGON
+                    middle_cY2 = cY
                 elif id == 6:
-                    outer_cY3 = cY - MARGIN_POLYGON_OUT
-                    middle_cX3 = cX + MARGIN_POLYGON_IN
+                    outer_cY3 = cY - MARGIN_POLYGON
+                    middle_cX3 = cX
                 elif id == 2:
-                    outer_cX3 = cX - MARGIN_POLYGON_OUT
-                    middle_cY3 = cY + MARGIN_POLYGON_IN
+                    outer_cX3 = cX - MARGIN_POLYGON
+                    middle_cY3 = cY
                 elif id == 7:
-                    outer_cY4 = cY - MARGIN_POLYGON_OUT
-                    middle_cX4 = cX - MARGIN_POLYGON_IN
+                    outer_cY4 = cY - MARGIN_POLYGON
+                    middle_cX4 = cX
                 elif id == 3:
-                    outer_cX4 = cX + MARGIN_POLYGON_OUT
-                    middle_cY4 = cY + MARGIN_POLYGON_IN
+                    outer_cX4 = cX + MARGIN_POLYGON
+                    middle_cY4 = cY
             
             middle_points = np.array([[outer_cX1, outer_cY1], [outer_cX2, outer_cY2], [outer_cX3, outer_cY3], [outer_cX4, outer_cY4]])
             print(f"Corners coor playfield: {middle_points}") if PRINTS else None
             cue_polygon = np.array([[middle_cX1, middle_cY1], [middle_cX2, middle_cY2], [middle_cX3, middle_cY3], [middle_cX4, middle_cY4]])
-    if marker_centers is not None:
-        return middle_points, marker_centers, cue_polygon
-    else:
-        print("No markers detected!")
-
-        
+    return middle_points, marker_centers, cue_polygon
 
 def draw_rectangle_markers(img, ids, marker_centers, values):
     mask = np.isin(values, [x[0] for x in marker_centers])
