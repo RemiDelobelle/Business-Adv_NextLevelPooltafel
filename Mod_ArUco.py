@@ -66,7 +66,7 @@ def aruco_display(corners, ids, rejected, img, rect_in_frame):
         cv2.putText(img, f"#Detected markers: {len(marker_centers)}", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
 
         print("IDs:", ids) if PRINTS else None
-        print("[DEBUG] Marker centers:", marker_centers) #if PRINTS_DEBUG else None
+        print("[DEBUG] Marker centers:", marker_centers) if PRINTS_DEBUG else None
         # print("IDs:", ids, type(ids))
 
         # Draw rectangles
