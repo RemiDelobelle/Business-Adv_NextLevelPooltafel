@@ -24,7 +24,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Open the camera
         try:
-            self.cap = cv2.VideoCapture(1)
+            self.cap = cv2.VideoCapture(1) # external camera
             if not self.cap.isOpened():
                 print("Failed to open camera")
         except:

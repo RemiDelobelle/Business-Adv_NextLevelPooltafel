@@ -37,18 +37,19 @@ def run_tracking_module(canny_threshold1):
     frame_height = 1080
 
     # === FOR WEBCAM ===
-    # cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-    # cap.set(cv2.CAP_PROP_FRAME_WIDTH, frame_width)
-    # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, frame_height)
-    # cap.set(cv2.CAP_PROP_FPS, 60)
-    # cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+    print("Opening webcam...")
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, frame_width)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, frame_height)
+    cap.set(cv2.CAP_PROP_FPS, 60)
+    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
 
     # # Run HP Webcam software to autofocus
-    # focus = 1
-    # cap.set(28, focus)
+    focus = 1
+    cap.set(28, focus)
 
-    path = "Dependencies\RealPool_Cut2.mp4"
-    cap = cv2.VideoCapture(path)
+    # path = "Dependencies\RealPool_Cut2.mp4"
+    # cap = cv2.VideoCapture(path)
 
     interpreter = tf.lite.Interpreter(model_path="Dependencies\V5_FOMO_FLOAT.lite")
     interpreter.allocate_tensors()
@@ -106,8 +107,8 @@ def run_tracking_module(canny_threshold1):
         centers = Mod_Bbox.calc_centers(contours)
 
         # Draw bounding boxes
-        bbox_coor = Mod_Bbox.calc_bboxes(centers, last_middle_points, BBOXSIZE, img, projection_MASK, drawing=True)
-
+        bbox_coor = Mod_Bbox.calc_bboxes(centers, last_middle_points, BBOXSIZE, img, circ_img, projection_MASK, drawing=True)
+        polygon = Polygon(last_middle_points)
         # Detect circles within bounding boxes
         for bbox in bbox_coor:
             xbox1, ybox1, xbox2, ybox2 = bbox
@@ -131,17 +132,17 @@ def run_tracking_module(canny_threshold1):
                 for circle in circles[0, :]:
                     center = (circle[0], circle[1])
                     radius = circle[2]
-
-                if not ball_buffer.exists_within_margin(center, margin): 
-                    if radius >= min_circle_radius:
-                        adjusted_center = (center[0] + xbox1, center[1] + ybox1)
-                        
-                        # cv2.circle(img, adjusted_center, radius, (0, 255, 0), 2) 
-                        # cv2.circle(projection_MASK, adjusted_center, radius, (0, 255, 0), 2)  
-                        circ_img = cv2.circle(circ_img, adjusted_center, radius + 10, (255, 255, 255), 2)  
-                        ball_buffer.add(adjusted_center)
-                        # print(f"{ball_buffer.get()} \n\r")
-                        # Average radius is 12-15
+                if polygon.contains(Point(center[0] + xbox1, center[1] + ybox1)):
+                    if not ball_buffer.exists_within_margin(center, margin): 
+                        if radius >= min_circle_radius:
+                            adjusted_center = (center[0] + xbox1, center[1] + ybox1)
+                            
+                            cv2.circle(img, adjusted_center, radius + 10, (0, 255, 0), 2) 
+                            cv2.circle(projection_MASK, adjusted_center, radius + 10, (255, 255, 255), 2)  
+                            circ_img = cv2.circle(circ_img, adjusted_center, radius + 10, (255, 255, 255), 2)  
+                            ball_buffer.add(adjusted_center)
+                            # print(f"{ball_buffer.get()} \n\r")
+                            # Average radius is 12-15
 
         # Perform ArUco marker detection periodically
         current_time = time.time()
@@ -156,7 +157,7 @@ def run_tracking_module(canny_threshold1):
             # ArUco detection
             detector = cv2.aruco.ArucoDetector(arucoDict, arucoParams)
             corners, ids, rejected = detector.detectMarkers(img)
-            current_middle_points, marker_centers, cue_polygon_test = Mod_ArUco.aruco_display(corners, ids, rejected, img, rect_in_frame)
+            current_middle_points, marker_centers, cue_polygon_test = Mod_ArUco.aruco_display(corners, ids, rejected, img, circ_img, rect_in_frame)
             if len(marker_centers) > 7:
                 working = False
             if len(cue_polygon_test) == 4:
@@ -166,7 +167,7 @@ def run_tracking_module(canny_threshold1):
             last_middle_points = current_middle_points
 
         if last_middle_points is not None and len(last_middle_points) > 0:
-            cv2.polylines(img, [last_middle_points], True, (255, 0, 255), 5)
+            cv2.polylines(circ_img, [last_middle_points], True, (255, 0, 255), 5)
             cv2.polylines(projection_MASK, [last_middle_points], True, (255, 0, 255), 5)
             # # PROBLEM: comment this line if you want to test fps problem
             cv2.polylines(mask_stripedBalls, [last_middle_points], True, (255, 0, 255), 5)
@@ -177,11 +178,15 @@ def run_tracking_module(canny_threshold1):
             print("Cue polygon", cue_polygon) if PRINTS_DEBUG else None
             x, y, w, h = cv2.boundingRect(cue_polygon)
             x1_roi, y1_roi, x2_roi, y2_roi = x, y, x + w, y + h
-            cv2.polylines(img, [cue_polygon], isClosed=True, color=(255, 0, 255), thickness=2)
-            cv2.rectangle(img, (x1_roi, y1_roi), (x2_roi, y2_roi), (255, 255, 255), 2)
+            cv2.polylines(circ_img, [cue_polygon], isClosed=True, color=(255, 0, 255), thickness=2)
+            cv2.rectangle(circ_img, (x1_roi, y1_roi), (x2_roi, y2_roi), (255, 255, 255), 2)
 
             if x2_roi > x1_roi and y2_roi > y1_roi:  # Check if the rectangle has valid coordinates
-                roi = clean_img[y1_roi:y2_roi, x1_roi:x2_roi]
+                hsv = cv2.cvtColor(clean_img, cv2.COLOR_BGR2HSV)
+                hsv[:, :, 0] += 9
+                hsv = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+                hsv = cv2.convertScaleAbs(hsv, alpha=1, beta=0)
+                roi = hsv[y1_roi:y2_roi, x1_roi:x2_roi]
                 if not roi.size == 0:  # Check if the ROI is not empty
                     x_offset, y_offset = x1_roi, y1_roi  # Offset used for extracting ROI
                     imgBlur = cv2.GaussianBlur(roi, (7, 7), 1)
@@ -202,6 +207,8 @@ def run_tracking_module(canny_threshold1):
                         cue_x1_orig, cue_y1_orig = cue_x1 + x_offset, cue_y1 + y_offset
                         cue_x2_orig, cue_y2_orig = cue_x2 + x_offset, cue_y2 + y_offset
                         cv2.line(img_cueLines, (cue_x1_orig, cue_y1_orig), (cue_x2_orig, cue_y2_orig), (0, 255, 0), 2)
+                        cv2.line(circ_img, (cue_x1_orig, cue_y1_orig), (cue_x2_orig, cue_y2_orig), (0, 255, 0), 2)
+                        cv2.line(projection_MASK, (cue_x1_orig, cue_y1_orig), (cue_x2_orig, cue_y2_orig), (0, 255, 0), 2)
 
                         cueTip_mask = np.zeros_like(clean_img)
                         tape_margin = 50
@@ -209,14 +216,14 @@ def run_tracking_module(canny_threshold1):
                         cueTip_mask = cv2.bitwise_and(clean_img, cueTip_mask)
                         cueTip_mask = cv2.cvtColor(cueTip_mask, cv2.COLOR_BGR2HSV)
 
-                        cue_x1_orig, cue_y1_orig, cue_x2_orig, cue_y2_orig, tape_mask = Mod_CueDetect.find_tipCue_tape(cueTip_mask, cue_x1_orig, cue_y1_orig, cue_x2_orig, cue_y2_orig, img)
-                        cv2.circle(img, (cue_x1_orig, cue_y1_orig), 5, (0, 255, 255), cv2.FILLED)
-                        cv2.circle(img, (cue_x2_orig, cue_y2_orig), 5, (255, 0, 0), cv2.FILLED)
+                        cue_x1_orig, cue_y1_orig, cue_x2_orig, cue_y2_orig, tape_mask = Mod_CueDetect.find_tipCue_tape(cueTip_mask, cue_x1_orig, cue_y1_orig, cue_x2_orig, cue_y2_orig, circ_img)
+                        cv2.circle(circ_img, (cue_x1_orig, cue_y1_orig), 5, (0, 255, 255), cv2.FILLED)
+                        cv2.circle(circ_img, (cue_x2_orig, cue_y2_orig), 5, (255, 0, 0), cv2.FILLED)
 
                         cue_sec_coor = np.array([cue_x2_orig, cue_y2_orig])
                         cue_angle = np.degrees(np.arctan2(cue_y2_orig - cue_y1_orig, cue_x2_orig - cue_x1_orig))
                         # cue_length = np.sqrt((cue_x2_orig - cue_x1_orig) ** 2 + (cue_y2_orig - cue_y1_orig) ** 2)
-                        Mod_CueDetect.draw_trajectory(img, cue_sec_coor, cue_polygon, cue_angle, MAX_BOUNCES)
+                        Mod_CueDetect.draw_trajectory(img, circ_img, projection_MASK, cue_sec_coor, cue_polygon, cue_angle, MAX_BOUNCES)
 
                         cv2.imshow("CueTip Mask", cueTip_mask)
                         cv2.imshow("Tape Mask", tape_mask)
@@ -248,19 +255,19 @@ def run_tracking_module(canny_threshold1):
         cap.set(28, focus)
         
         img = cv2.resize(img, (1280, 720))
-        circ_img = cv2.resize(circ_img, (1280, 720))
+        circ_img = cv2.resize(circ_img, (1920, 1080))
 
         # Scale all images to 480p
         overlay = cv2.resize(overlay, (640, 480))
-        projection_MASK = cv2.resize(projection_MASK, (640, 480))
+        projection_MASK = cv2.resize(projection_MASK, (1920, 1080))
         #cv2.imshow('Original', img)
         # cv2.imshow('Overlay', overlay)
-        # cv2.imshow('Original boxes', projection_MASK)
+        cv2.imshow('Projection Mask', projection_MASK)
         cv2.imshow('Circles', circ_img)
 
         heatmap = cv2.applyColorMap(np.uint8(255 * output_heatmap), cv2.COLORMAP_JET)
-        heatmap = cv2.resize(heatmap, (640, 480))
-        # cv2.imshow('Heatmap', heatmap)
+        heatmap = cv2.resize(heatmap, (1920, 1080))
+        cv2.imshow('Heatmap', heatmap)
         if cv2.waitKey(1) & 0xFF == 27:
             break
 

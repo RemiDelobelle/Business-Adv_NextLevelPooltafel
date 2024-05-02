@@ -2,7 +2,7 @@
 import cv2
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor
-from Mod_Constants import PRINTS, PRINTS_DEBUG, MARGIN_POLYGON
+from Mod_Constants import PRINTS, PRINTS_DEBUG, MARGIN_BALLS, MARGIN_POLYGON
 
 ARUCO_DICT = {
     "DICT_4X4_50": cv2.aruco.DICT_4X4_50,
@@ -28,7 +28,7 @@ ARUCO_DICT = {
     "DICT_APRILTAG_36h11": cv2.aruco.DICT_APRILTAG_36h11
 }
 
-def aruco_display(corners, ids, rejected, img, rect_in_frame):
+def aruco_display(corners, ids, rejected, img, circ_img, rect_in_frame):
     middle_points = np.array([])
     cue_polygon = np.array([])
     if len(corners) > 0:
@@ -70,9 +70,9 @@ def aruco_display(corners, ids, rejected, img, rect_in_frame):
 
         # Draw rectangles
         values1 = [0, 1, 2, 3]
-        rect_in_frame[0] = draw_rectangle_markers(img, ids, marker_centers, values1)     
+        rect_in_frame[0] = draw_rectangle_markers(circ_img, ids, marker_centers, values1)     
         values2 = [4, 5, 6, 7]
-        rect_in_frame[1] = draw_rectangle_markers(img, ids, marker_centers, values2)
+        rect_in_frame[1] = draw_rectangle_markers(circ_img, ids, marker_centers, values2)
 
         if rect_in_frame[0] and rect_in_frame[1]:
             print("[INFO] Both rectangles are in frame!") if PRINTS else None
@@ -89,30 +89,31 @@ def aruco_display(corners, ids, rejected, img, rect_in_frame):
 
             for id, (cX, cY) in marker_centers:
                 if id == 4:
-                    outer_cY1 = cY + MARGIN_POLYGON
-                    middle_cX1 = cX
+                    outer_cX1 = cX - MARGIN_BALLS                    
+                    middle_cX1 = cX - MARGIN_POLYGON
                 elif id == 0:
-                    outer_cX1 = cX + MARGIN_POLYGON
-                    middle_cY1 = cY
+                    outer_cY1 = cY - MARGIN_BALLS
+                    middle_cY1 = cY - MARGIN_POLYGON
                 elif id == 5:
-                    outer_cY2 = cY + MARGIN_POLYGON
-                    middle_cX2 = cX
+                    outer_cX2 = cX + MARGIN_BALLS
+                    middle_cX2 = cX + MARGIN_POLYGON
                 elif id == 1:
-                    outer_cX2 = cX - MARGIN_POLYGON
-                    middle_cY2 = cY
+                    outer_cY2 = cY - MARGIN_BALLS
+                    middle_cY2 = cY - MARGIN_POLYGON
                 elif id == 6:
-                    outer_cY3 = cY - MARGIN_POLYGON
-                    middle_cX3 = cX
+                    outer_cX3 = cX + MARGIN_BALLS
+                    middle_cX3 = cX + MARGIN_POLYGON
                 elif id == 2:
-                    outer_cX3 = cX - MARGIN_POLYGON
-                    middle_cY3 = cY
+                    outer_cY3 = cY + MARGIN_BALLS
+                    middle_cY3 = cY + MARGIN_POLYGON
                 elif id == 7:
-                    outer_cY4 = cY - MARGIN_POLYGON
-                    middle_cX4 = cX
+                    outer_cX4 = cX - MARGIN_BALLS
+                    middle_cX4 = cX - MARGIN_POLYGON
                 elif id == 3:
-                    outer_cX4 = cX + MARGIN_POLYGON
-                    middle_cY4 = cY
-            
+                    outer_cY4 = cY + MARGIN_BALLS
+                    middle_cY4 = cY + MARGIN_POLYGON
+
+            # cv2.circle(img, (outer_cX1+MARGIN_BALLS, outer_cY3-MARGIN_BALLS), 8, (0, 255, 255), -1)
             middle_points = np.array([[outer_cX1, outer_cY1], [outer_cX2, outer_cY2], [outer_cX3, outer_cY3], [outer_cX4, outer_cY4]])
             print(f"Corners coor playfield: {middle_points}") if PRINTS else None
             cue_polygon = np.array([[middle_cX1, middle_cY1], [middle_cX2, middle_cY2], [middle_cX3, middle_cY3], [middle_cX4, middle_cY4]])
@@ -131,7 +132,7 @@ def draw_rectangle_markers(img, ids, marker_centers, values):
                 corner_index = marker_id - min_value
                 ordered_centers[corner_index] = marker_centers[i][1]
 
-        cv2.polylines(img, [ordered_centers], True, (0, 255, 0), 2)
+        cv2.polylines(img, [ordered_centers], True, (0, 255, 255), 2)
 
         return True
     else:

@@ -73,7 +73,7 @@ def calc_centers(contours):
             centers.append(None)
     return centers
 
-def calc_bboxes(centers, last_middle_points, box_size, img, projection_MASK, drawing = True):
+def calc_bboxes(centers, last_middle_points, box_size, img, circ_img, projection_MASK, drawing = True):
     bbox_coor = []
     polygon = Polygon(last_middle_points)
     for center in centers:
@@ -87,5 +87,6 @@ def calc_bboxes(centers, last_middle_points, box_size, img, projection_MASK, dra
                 xbox2 = center[0] + box_size
                 ybox2 = center[1] + box_size
                 bbox_coor.append([xbox1, ybox1, xbox2, ybox2])
-                cv2.rectangle(img, (xbox1, ybox1), (xbox2, ybox2), (0, 0, 255), 2) if drawing else None
+                # cv2.rectangle(img, (xbox1, ybox1), (xbox2, ybox2), (0, 0, 255), 2) if drawing else None
+                cv2.rectangle(circ_img, (xbox1, ybox1), (xbox2, ybox2), (0, 0, 255), 2) if drawing else None
     return bbox_coor

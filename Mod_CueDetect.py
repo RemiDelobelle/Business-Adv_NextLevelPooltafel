@@ -44,7 +44,7 @@ def findCue(imgDil, min_line_length, img_with_lines):
 
 
 
-def draw_trajectory(window, position, polygon, angle, max_bounces):
+def draw_trajectory(window, circ_img, projection_MASK, position, polygon, angle, max_bounces):
     # Define the initial direction vector based on the given angle
     direction = np.array([np.cos(np.radians(angle)), np.sin(np.radians(angle))])
 
@@ -65,6 +65,8 @@ def draw_trajectory(window, position, polygon, angle, max_bounces):
 
             # Draw the red line from the previous position to the current position
             cv2.line(window, tuple(prev_position), tuple(position.astype(np.int32)), (0, 0, 255), 2)
+            cv2.line(circ_img, tuple(prev_position), tuple(position.astype(np.int32)), (0, 0, 255), 2)
+            cv2.line(projection_MASK, tuple(prev_position), tuple(position.astype(np.int32)), (0, 0, 255), 2)
 
             # Update the previous position
             prev_position = position.astype(np.int32)
@@ -113,7 +115,7 @@ def find_closest_edge(polygon, position):
 
 
 
-def find_tipCue_tape(cueTip_mask, x1_orig, y1_orig, x2_orig, y2_orig, img_with_polygon):
+def find_tipCue_tape(cueTip_mask, x1_orig, y1_orig, x2_orig, y2_orig, circ_img):
     # Mss fel roze --> bijna niemand draagt roze kleding, valt op op de pooltafel -----------------------------------------------------------------
     # Zwart lukt niet, teveel donkere kleuren op de pooltafel
 
@@ -124,6 +126,10 @@ def find_tipCue_tape(cueTip_mask, x1_orig, y1_orig, x2_orig, y2_orig, img_with_p
     # Green
     lower_tape = np.array([40, 40, 40])
     upper_tape = np.array([80, 255, 255])
+    # Pink
+    # lower_tape = np.array([140, 50, 50])
+    # upper_tape = np.array([180, 255, 255])
+
     tape_mask = cv2.inRange(cueTip_mask, lower_tape, upper_tape)
 
     contours, _ = cv2.findContours(tape_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -161,7 +167,7 @@ def find_tipCue_tape(cueTip_mask, x1_orig, y1_orig, x2_orig, y2_orig, img_with_p
         # Set center of mass to arbitrary point if total area is zero
         center_of_mass_x, center_of_mass_y = 0, 0
 
-    cv2.circle(img_with_polygon, (center_of_mass_x, center_of_mass_y), 5, (20, 20, 20), cv2.FILLED)
+    cv2.circle(circ_img, (center_of_mass_x, center_of_mass_y), 5, (20, 20, 20), cv2.FILLED)
 
     distance_point1 = np.sqrt((x1_orig - center_of_mass_x)**2 + (y1_orig - center_of_mass_y)**2)
     distance_point2 = np.sqrt((x2_orig - center_of_mass_x)**2 + (y2_orig - center_of_mass_y)**2)
