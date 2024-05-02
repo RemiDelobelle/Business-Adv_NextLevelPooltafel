@@ -14,8 +14,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1920, 1080)
-        MainWindow.setStyleSheet("background-color: rgb(167, 255, 192);")
+        MainWindow.resize(1920, 1154)
+        MainWindow.setStyleSheet("background-color: rgb(70, 117, 56);")
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.Developer = QtWidgets.QTabWidget(self.centralwidget)
@@ -26,11 +26,11 @@ class Ui_MainWindow(object):
         self.Standard.setObjectName("Standard")
         self.lbl = QtWidgets.QLabel(self.Standard)
         self.lbl.setGeometry(QtCore.QRect(20, 30, 451, 41))
-        self.lbl.setStyleSheet("color: rgb(0, 170, 28);\n"
-"font: 24pt \"Calibri\";")
+        self.lbl.setStyleSheet("font: 24pt \"Calibri\";")
         self.lbl.setObjectName("lbl")
         self.run_main_btn = QtWidgets.QPushButton(self.Standard)
         self.run_main_btn.setGeometry(QtCore.QRect(110, 130, 251, 71))
+        self.run_main_btn.setStyleSheet("background-color: rgb(175, 255, 80);")
         self.run_main_btn.setObjectName("run_main_btn")
         self.Developer.addTab(self.Standard, "")
         self.Developer1 = QtWidgets.QWidget()
@@ -52,12 +52,20 @@ class Ui_MainWindow(object):
         self.run_camera_feed_btn = QtWidgets.QPushButton(self.Developer1)
         self.run_camera_feed_btn.setGeometry(QtCore.QRect(660, 80, 301, 41))
         self.run_camera_feed_btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.run_camera_feed_btn.setStyleSheet("background-color: rgb(175, 255, 80);")
         self.run_camera_feed_btn.setCheckable(False)
         self.run_camera_feed_btn.setObjectName("run_camera_feed_btn")
         self.label_Canny = QtWidgets.QLabel(self.Developer1)
         self.label_Canny.setGeometry(QtCore.QRect(30, 580, 480, 360))
         self.label_Canny.setObjectName("label_Canny")
         self.Developer.addTab(self.Developer1, "")
+        self.label = QtWidgets.QLabel(self.centralwidget)
+        self.label.setGeometry(QtCore.QRect(0, 0, 1941, 1081))
+        self.label.setText("")
+        self.label.setPixmap(QtGui.QPixmap("../../../../../../Users/ppvr3/Downloads/output-onlinepngtools.png"))
+        self.label.setObjectName("label")
+        self.label.raise_()
+        self.Developer.raise_()
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
@@ -66,7 +74,7 @@ class Ui_MainWindow(object):
         self.actionStandardMode.setObjectName("actionStandardMode")
 
         self.retranslateUi(MainWindow)
-        self.Developer.setCurrentIndex(1)
+        self.Developer.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -81,13 +89,3 @@ class Ui_MainWindow(object):
         self.label_Canny.setText(_translate("MainWindow", "LabelCanny"))
         self.Developer.setTabText(self.Developer.indexOf(self.Developer1), _translate("MainWindow", "Developer"))
         self.actionStandardMode.setText(_translate("MainWindow", "StandardMode"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec_())
