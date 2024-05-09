@@ -36,20 +36,20 @@ def run_tracking_module(canny_threshold1):
     frame_width = 1920
     frame_height = 1080
 
-    # === FOR WEBCAM ===
-    print("Opening webcam...")
-    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, frame_width)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, frame_height)
-    cap.set(cv2.CAP_PROP_FPS, 60)
-    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+    # # === FOR WEBCAM ===
+    # print("Opening webcam...")
+    # cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    # cap.set(cv2.CAP_PROP_FRAME_WIDTH, frame_width)
+    # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, frame_height)
+    # cap.set(cv2.CAP_PROP_FPS, 60)
+    # cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
 
-    # # Run HP Webcam software to autofocus
-    focus = 1
-    cap.set(28, focus)
+    # # # Run HP Webcam software to autofocus
+    # focus = 1
+    # cap.set(28, focus)
 
-    # path = "Dependencies\RealPool_Cut2.mp4"
-    # cap = cv2.VideoCapture(path)
+    path = "Dependencies\RealPool_Cut2.mp4"
+    cap = cv2.VideoCapture(path)
 
     interpreter = tf.lite.Interpreter(model_path="Dependencies\V5_FOMO_FLOAT.lite")
     interpreter.allocate_tensors()

@@ -89,28 +89,28 @@ def aruco_display(corners, ids, rejected, img, circ_img, rect_in_frame):
 
             for id, (cX, cY) in marker_centers:
                 if id == 4:
-                    outer_cY1 = cY - MARGIN_POLYGON_OUT
+                    outer_cX1 = cX - MARGIN_POLYGON_OUT
                     inner_cX1 = cX - MARGIN_POLYGON_IN
                 elif id == 0:
-                    outer_cX1 = cX - MARGIN_POLYGON_OUT
+                    outer_cY1 = cY - MARGIN_POLYGON_OUT
                     inner_cY1 = cY - MARGIN_POLYGON_IN
                 elif id == 5:
-                    outer_cY2 = cY - MARGIN_POLYGON_OUT
+                    outer_cX2 = cX + MARGIN_POLYGON_OUT
                     inner_cX2 = cX + MARGIN_POLYGON_IN
                 elif id == 1:
-                    outer_cX2 = cX + MARGIN_POLYGON_OUT
+                    outer_cY2 = cY - MARGIN_POLYGON_OUT
                     inner_cY2 = cY - MARGIN_POLYGON_IN
                 elif id == 6:
-                    outer_cY3 = cY + MARGIN_POLYGON_OUT
+                    outer_cX3 = cX + MARGIN_POLYGON_OUT
                     inner_cX3 = cX + MARGIN_POLYGON_IN
                 elif id == 2:
-                    outer_cX3 = cX + MARGIN_POLYGON_OUT
+                    outer_cY3 = cY + MARGIN_POLYGON_OUT
                     inner_cY3 = cY + MARGIN_POLYGON_IN
                 elif id == 7:
-                    outer_cY4 = cY + MARGIN_POLYGON_OUT
+                    outer_cX4 = cX - MARGIN_POLYGON_OUT
                     inner_cX4 = cX - MARGIN_POLYGON_IN
                 elif id == 3:
-                    outer_cX4 = cX - MARGIN_POLYGON_OUT
+                    outer_cY4 = cY + MARGIN_POLYGON_OUT
                     inner_cY4 = cY + MARGIN_POLYGON_IN
             
             middle_points = np.array([[outer_cX1, outer_cY1], [outer_cX2, outer_cY2], [outer_cX3, outer_cY3], [outer_cX4, outer_cY4]])
