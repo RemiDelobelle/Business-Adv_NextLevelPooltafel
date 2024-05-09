@@ -61,7 +61,7 @@ def run_tracking_module(test):
 
     current_middle_points = np.array([])
     last_middle_points = np.array([])
-    cue_polygon = np.array([])
+    cue_polygon = np.array([[0,0],[0,0],[0,0],[0,0]])
     prev_count_Balls = [0, 0]
     score = [0, 0]
 
@@ -75,6 +75,11 @@ def run_tracking_module(test):
         ret, clean_img = cap.read()
         timer = cv2.getTickCount()
         img = clean_img.copy()
+
+        if ret is False:
+            print("Error: Unable to capture frame.")
+            cv2.destroyAllWindows()
+            exit()
 
         if clean_img is None:
             print("Error: Unable to load the image.")
@@ -158,7 +163,7 @@ def run_tracking_module(test):
                     if cue_x1 is not None and cue_y1 is not None and cue_x2 is not None and cue_y2 is not None:
                         cue_x1_orig, cue_y1_orig = cue_x1 + x_offset, cue_y1 + y_offset
                         cue_x2_orig, cue_y2_orig = cue_x2 + x_offset, cue_y2 + y_offset
-                        cv2.line(img_cueLines, (cue_x1_orig, cue_y1_orig), (cue_x2_orig, cue_y2_orig), (0, 255, 0), 2)
+                        cv2.line(img, (cue_x1_orig, cue_y1_orig), (cue_x2_orig, cue_y2_orig), (0, 255, 0), 2)
 
                         cueTip_mask = np.zeros_like(clean_img)
                         tape_margin = 50
@@ -180,9 +185,6 @@ def run_tracking_module(test):
 
                     cv2.imshow("Cue img Dilate", imgDil)
                     cv2.imshow("Cue lines", img_cueLines)
-        
-
-
 
 
         
