@@ -83,6 +83,11 @@ def run_tracking_module(canny_threshold1):
         timer = cv2.getTickCount()
         img = clean_img.copy()
 
+        if ret is False:
+            print("Error: Unable to capture frame.")
+            cv2.destroyAllWindows()
+            exit()
+
         if clean_img is None:
             print("Error: Unable to load the image.")
             cv2.destroyAllWindows()
