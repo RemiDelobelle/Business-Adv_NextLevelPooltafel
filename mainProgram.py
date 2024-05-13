@@ -36,20 +36,20 @@ def run_tracking_module(canny_threshold1):
     frame_width = 1920
     frame_height = 1080
 
-    # # === FOR WEBCAM ===
-    # print("Opening webcam...")
-    # cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-    # cap.set(cv2.CAP_PROP_FRAME_WIDTH, frame_width)
-    # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, frame_height)
-    # cap.set(cv2.CAP_PROP_FPS, 60)
-    # cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+    # === FOR WEBCAM ===
+    print("Opening webcam...")
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, frame_width)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, frame_height)
+    cap.set(cv2.CAP_PROP_FPS, 60)
+    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
 
-    # # # Run HP Webcam software to autofocus
-    # focus = 1
-    # cap.set(28, focus)
+    # # Run HP Webcam software to autofocus
+    focus = 1
+    cap.set(28, focus)
 
-    path = "Dependencies\RealPool_Cut2.mp4"
-    cap = cv2.VideoCapture(path)
+    # path = "Dependencies\RealPool_Cut2.mp4"
+    # cap = cv2.VideoCapture(path)
 
     interpreter = tf.lite.Interpreter(model_path="Dependencies\V5_FOMO_FLOAT.lite")
     interpreter.allocate_tensors()
@@ -113,8 +113,8 @@ def run_tracking_module(canny_threshold1):
 
         # Draw bounding boxes
         bbox_coor = Mod_Bbox.calc_bboxes(centers, last_middle_points, BBOXSIZE, img, circ_img, projection_MASK, drawing=True)
+
         polygon = Polygon(last_middle_points)
-        # Detect circles within bounding boxes
         for bbox in bbox_coor:
             xbox1, ybox1, xbox2, ybox2 = bbox
             roi = clean_img[ybox1:ybox2, xbox1:xbox2]
@@ -146,8 +146,6 @@ def run_tracking_module(canny_threshold1):
                             cv2.circle(projection_MASK, adjusted_center, radius + 10, (255, 255, 255), 2)  
                             circ_img = cv2.circle(circ_img, adjusted_center, radius + 10, (255, 255, 255), 2)  
                             ball_buffer.add(adjusted_center)
-                            # print(f"{ball_buffer.get()} \n\r")
-                            # Average radius is 12-15
 
         # Perform ArUco marker detection periodically
         current_time = time.time()
@@ -159,7 +157,6 @@ def run_tracking_module(canny_threshold1):
             if current_time - last_detection_time >= stop_time:
                 working = False
 
-            # ArUco detection
             detector = cv2.aruco.ArucoDetector(arucoDict, arucoParams)
             corners, ids, rejected = detector.detectMarkers(img)
             current_middle_points, marker_centers, cue_polygon_test = Mod_ArUco.aruco_display(corners, ids, rejected, img, circ_img, rect_in_frame)
@@ -174,10 +171,6 @@ def run_tracking_module(canny_threshold1):
         if last_middle_points is not None and len(last_middle_points) > 0:
             cv2.polylines(circ_img, [last_middle_points], True, (255, 0, 255), 5)
             cv2.polylines(projection_MASK, [last_middle_points], True, (255, 0, 255), 5)
-            # # PROBLEM: comment this line if you want to test fps problem
-            cv2.polylines(mask_stripedBalls, [last_middle_points], True, (255, 0, 255), 5)
-
-
 
         if CUE_DETECTION:
             print("Cue polygon", cue_polygon) if PRINTS_DEBUG else None
@@ -236,17 +229,9 @@ def run_tracking_module(canny_threshold1):
                     cv2.imshow("Cue img Dilate", imgDil)
                     cv2.imshow("Cue lines", img_cueLines)
         
-
-        # Display the 'Original' window
         cv2.imshow('Original', img)
-
-        # Set the 'Original' window to fullscreen on the second screen
         screen_geometry = QDesktopWidget().screenGeometry(0)
-        #cv2.moveWindow('Original', screen_geometry.x(), screen_geometry.y())
-        cv2.resizeWindow('Original', screen_geometry.width(), screen_geometry.height())  # Resize to screen resolution
-        #cv2.setWindowProperty('Original', cv2.WINDOW_NORMAL, cv2.WINDOW_NORMAL)
-
-
+        cv2.resizeWindow('Original', screen_geometry.width(), screen_geometry.height())
 
         # cv2 window settings
         fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer)
@@ -255,7 +240,6 @@ def run_tracking_module(canny_threshold1):
         heatmap = cv2.applyColorMap(np.uint8(255 * output_heatmap), cv2.COLORMAP_JET)
         overlay = cv2.addWeighted(img, 0.5, heatmap, 0.5, 0)
 
-        # Display windows
         focus = 1
         cap.set(28, focus)
         
@@ -265,8 +249,6 @@ def run_tracking_module(canny_threshold1):
         # Scale all images to 480p
         overlay = cv2.resize(overlay, (640, 480))
         projection_MASK = cv2.resize(projection_MASK, (1920, 1080))
-        #cv2.imshow('Original', img)
-        # cv2.imshow('Overlay', overlay)
         cv2.imshow('Projection Mask', projection_MASK)
         cv2.imshow('Circles', circ_img)
 
