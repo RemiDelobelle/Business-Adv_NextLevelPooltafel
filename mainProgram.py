@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from PyQt5.QtWidgets import QDesktopWidget
 
-from Mod_Constants import BBOXSIZE, PRINTS, PRINTS_DEBUG, CUE_DETECTION, MAX_BOUNCES, CIRC_MARGIN, MIN_CIRC_RADIUS
+from Mod_Constants import BBOXSIZE, PRINTS, PRINTS_DEBUG, CUE_DETECTION, MAX_BOUNCES, CIRC_MARGIN, MIN_CIRC_RADIUS, BUFFER_SIZE
 import Mod_ArUco
 import Mod_Bbox
 import Mod_Preprocess
@@ -70,8 +70,7 @@ def run_tracking_module(canny_threshold1):
     last_detection_time = time.time()
     working = True
 
-    buffer_size = 50
-    ball_buffer = CircularBuffer(buffer_size)
+    ball_buffer = CircularBuffer(BUFFER_SIZE)
 
     while True:
         ret, clean_img = cap.read()
