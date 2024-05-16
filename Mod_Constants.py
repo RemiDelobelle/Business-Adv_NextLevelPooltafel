@@ -2,7 +2,7 @@
 PRINTS = False
 PRINTS_DEBUG = False
 THRESHOLD_CONTOUR = 0.3     # oude: 0.4
-BBOXSIZE = 60
+BBOXSIZE = 70
 THRESHOLD_STRIPED_BALLS = 10.0  # Percentage of white in the bounding box
 MARGIN_STRIPED_BALLS = 10       # Margin to add to the percentage of white in the bounding box
 MARGIN_BALLS = 48

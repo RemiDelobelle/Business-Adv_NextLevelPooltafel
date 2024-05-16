@@ -71,7 +71,7 @@ def run_tracking_module(canny_threshold1):
     working = True
 
     # Variables for extra circle detection
-    min_circle_radius = 12.5
+    min_circle_radius = 16
     min_radius_difference = 10
     avg_radius = 0
 
