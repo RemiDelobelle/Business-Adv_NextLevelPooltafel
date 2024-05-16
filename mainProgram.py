@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from PyQt5.QtWidgets import QDesktopWidget
 
-from Mod_Constants import BBOXSIZE, PRINTS, PRINTS_DEBUG, CUE_DETECTION, MAX_BOUNCES, CIRC_MARGIN, MIN_CIRC_RADIUS, BUFFER_SIZE
+from Mod_Constants import BBOXSIZE, PRINTS_DEBUG, CUE_DETECTION, MAX_BOUNCES, CIRC_MARGIN, MIN_CIRC_RADIUS, BUFFER_SIZE
 import Mod_ArUco
 import Mod_Bbox
 import Mod_Preprocess
@@ -28,8 +28,8 @@ def run_tracking_module(canny_threshold1):
     aruco_type = "DICT_4X4_50"
     arucoDict = cv2.aruco.getPredefinedDictionary(Mod_ArUco.ARUCO_DICT[aruco_type])
     arucoParams = cv2.aruco.DetectorParameters()
-    start_timer_markers = time.time()
-    both_marker_found = False
+    # start_timer_markers = time.time()
+    # both_marker_found = False
 
     rect_in_frame: bool = [False, False]
 
@@ -61,8 +61,8 @@ def run_tracking_module(canny_threshold1):
     current_middle_points = np.array([])
     last_middle_points = np.array([])
     cue_polygon = np.array([[0,0],[0,0],[0,0],[0,0]])
-    prev_count_Balls = [0, 0]
-    score = [0, 0]
+    # prev_count_Balls = [0, 0]
+    # score = [0, 0]
 
     # Set interval for ArUco marker detection (in seconds)
     aruco_detection_interval = 5  
@@ -96,7 +96,7 @@ def run_tracking_module(canny_threshold1):
 
         circ_img = clean_img.copy()
 
-        mask_stripedBalls = np.zeros_like(clean_img)
+        # mask_stripedBalls = np.zeros_like(clean_img)
         projection_MASK = np.zeros_like(clean_img)
 
         # Preprocess image + get contours from model
@@ -205,7 +205,7 @@ def run_tracking_module(canny_threshold1):
                         cueTip_mask = cv2.bitwise_and(clean_img, cueTip_mask)
                         cueTip_mask = cv2.cvtColor(cueTip_mask, cv2.COLOR_BGR2HSV)
 
-                        cue_x1_orig, cue_y1_orig, cue_x2_orig, cue_y2_orig, tape_mask = Mod_CueDetect.find_tipCue_tape(cueTip_mask, cue_x1_orig, cue_y1_orig, cue_x2_orig, cue_y2_orig, circ_img)
+                        cue_x1_orig, cue_y1_orig, cue_x2_orig, cue_y2_orig, tape_mask = Mod_CueDetect.find_tipCue_tape(cueTip_mask, cue_x1_orig, cue_y1_orig, cue_x2_orig, cue_y2_orig, circ_img, clean_img)
                         cv2.circle(circ_img, (cue_x1_orig, cue_y1_orig), 5, (0, 255, 255), cv2.FILLED)
                         cv2.circle(circ_img, (cue_x2_orig, cue_y2_orig), 5, (255, 0, 0), cv2.FILLED)
 

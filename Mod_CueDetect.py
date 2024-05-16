@@ -115,7 +115,7 @@ def find_closest_edge(polygon, position):
 
 
 
-def find_tipCue_tape(cueTip_mask, x1_orig, y1_orig, x2_orig, y2_orig, circ_img):
+def find_tipCue_tape(cueTip_mask, x1_orig, y1_orig, x2_orig, y2_orig, circ_img, clean_img):
     # # Red
     # lower_tape = np.array([0, 100, 100])
     # upper_tape = np.array([10, 255, 255])
@@ -124,8 +124,11 @@ def find_tipCue_tape(cueTip_mask, x1_orig, y1_orig, x2_orig, y2_orig, circ_img):
     lower_tape = np.array([40, 40, 40])
     upper_tape = np.array([80, 255, 255])
 
-    tape_mask = cv2.inRange(cueTip_mask, lower_tape, upper_tape)
+    green_tape_mask = cv2.inRange(cueTip_mask, lower_tape, upper_tape)
+    cv2.imshow("cueTip_mask green", green_tape_mask)
 
+
+    # PARAMETERS SMALL POOL TABLE
     # # Define HSV thresholds for vibrant pink
     # lower_pink = np.array([155, 70, 70])
     # upper_pink = np.array([170, 255, 255])
@@ -142,9 +145,61 @@ def find_tipCue_tape(cueTip_mask, x1_orig, y1_orig, x2_orig, y2_orig, circ_img):
     # mask_red2 = cv2.inRange(cueTip_mask, lower_red2, upper_red2)
     # mask_red = cv2.bitwise_or(mask_red1, mask_red2)
 
-    # Combine masks to detect pink while excluding red/orange
+    # # Combine masks to detect pink while excluding red/orange
     # tape_mask = cv2.bitwise_and(mask_pink, cv2.bitwise_not(mask_red))
+    contours, _ = cv2.findContours(green_tape_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Fill contours in the pinkTip_mask
+    pinkTip_mask = np.zeros_like(clean_img)
+    tape_margin = 30
+    for contour in contours:
+        x, y, w, h = cv2.boundingRect(contour)
+        if w > 5 and h > 5:
+            cv2.drawContours(pinkTip_mask, [contour], -1, (255, 255, 255), thickness=(cv2.FILLED)+tape_margin)
+
+    pinkTip_mask = cv2.bitwise_and(clean_img, pinkTip_mask)
+    pinkTip_mask = cv2.cvtColor(pinkTip_mask, cv2.COLOR_BGR2HSV)
+    cv2.imshow("cueTip_mask pink", pinkTip_mask)
+
+
+    # Define HSV thresholds for vibrant pink
+    lower_pink = np.array([155, 60, 60])
+    upper_pink = np.array([170, 255, 255])
+
+    # Define HSV thresholds for red
+    lower_red1 = np.array([0, 100, 100])
+    upper_red1 = np.array([5, 255, 255])
+    lower_red2 = np.array([175, 100, 100])
+    upper_red2 = np.array([180, 255, 255])
+
+    # Define HSV thresholds for orange
+    lower_orange = np.array([10, 100, 100])
+    upper_orange = np.array([20, 255, 255])
+
+    # Define HSV thresholds for dark red
+    lower_dark_red = np.array([160, 100, 100])
+    upper_dark_red = np.array([175, 255, 255])
+
+    # Define HSV thresholds for purple
+    lower_purple = np.array([130, 50, 50])
+    upper_purple = np.array([155, 255, 255])
+
+    # Create masks for pink, red, orange, dark red, and purple
+    mask_pink = cv2.inRange(pinkTip_mask, lower_pink, upper_pink)
+    mask_red1 = cv2.inRange(pinkTip_mask, lower_red1, upper_red1)
+    mask_red2 = cv2.inRange(pinkTip_mask, lower_red2, upper_red2)
+    mask_red = cv2.bitwise_or(mask_red1, mask_red2)
+    mask_orange = cv2.inRange(pinkTip_mask, lower_orange, upper_orange)
+    mask_dark_red = cv2.inRange(pinkTip_mask, lower_dark_red, upper_dark_red)
+    mask_purple = cv2.inRange(pinkTip_mask, lower_purple, upper_purple)
+
+    # Combine masks to detect pink while excluding red, orange, dark red, and purple
+    excluded_mask = cv2.bitwise_or(mask_red, mask_orange)
+    excluded_mask = cv2.bitwise_or(excluded_mask, mask_dark_red)
+    excluded_mask = cv2.bitwise_or(excluded_mask, mask_purple)
+    tape_mask = cv2.bitwise_and(mask_pink, cv2.bitwise_not(excluded_mask))
     contours, _ = cv2.findContours(tape_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
 
     # Initialize variables to compute weighted average
     total_area = 0

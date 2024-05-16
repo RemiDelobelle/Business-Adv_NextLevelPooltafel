@@ -27,7 +27,7 @@ class Ui_MainWindow(object):
         self.Standard.setObjectName("Standard")
         self.lbl = QtWidgets.QLabel(self.Standard)
         self.lbl.setGeometry(QtCore.QRect(270, 160, 681, 171))
-        self.lbl.setStyleSheet("font: 48pt \"MS Shell Dlg 2\";\n"
+        self.lbl.setStyleSheet("font: 36pt \"MS Shell Dlg 2\";\n"
 "background-color: rgb(5, 90, 0);")
         self.lbl.setObjectName("lbl")
         self.run_main_btn = QtWidgets.QPushButton(self.Standard)
