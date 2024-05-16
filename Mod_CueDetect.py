@@ -116,22 +116,34 @@ def find_closest_edge(polygon, position):
 
 
 def find_tipCue_tape(cueTip_mask, x1_orig, y1_orig, x2_orig, y2_orig, circ_img):
-    # Mss fel roze --> bijna niemand draagt roze kleding, valt op op de pooltafel -----------------------------------------------------------------
-    # Zwart lukt niet, teveel donkere kleuren op de pooltafel
-
-    # Red
+    # # Red
     # lower_tape = np.array([0, 100, 100])
     # upper_tape = np.array([10, 255, 255])
 
     # Green
     lower_tape = np.array([40, 40, 40])
     upper_tape = np.array([80, 255, 255])
-    # Pink
-    # lower_tape = np.array([140, 50, 50])
-    # upper_tape = np.array([180, 255, 255])
 
     tape_mask = cv2.inRange(cueTip_mask, lower_tape, upper_tape)
 
+    # # Define HSV thresholds for vibrant pink
+    # lower_pink = np.array([155, 70, 70])
+    # upper_pink = np.array([170, 255, 255])
+
+    # # Define HSV thresholds for red
+    # lower_red1 = np.array([0, 100, 100])
+    # upper_red1 = np.array([10, 255, 255])
+    # lower_red2 = np.array([170, 100, 100])
+    # upper_red2 = np.array([180, 255, 255])
+
+    # # Create masks for pink and red
+    # mask_pink = cv2.inRange(cueTip_mask, lower_pink, upper_pink)
+    # mask_red1 = cv2.inRange(cueTip_mask, lower_red1, upper_red1)
+    # mask_red2 = cv2.inRange(cueTip_mask, lower_red2, upper_red2)
+    # mask_red = cv2.bitwise_or(mask_red1, mask_red2)
+
+    # Combine masks to detect pink while excluding red/orange
+    # tape_mask = cv2.bitwise_and(mask_pink, cv2.bitwise_not(mask_red))
     contours, _ = cv2.findContours(tape_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     # Initialize variables to compute weighted average
