@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from PyQt5.QtWidgets import QDesktopWidget
 
-from Mod_Constants import BBOXSIZE, PRINTS, PRINTS_DEBUG, CUE_DETECTION, MAX_BOUNCES
+from Mod_Constants import BBOXSIZE, PRINTS, PRINTS_DEBUG, CUE_DETECTION, MAX_BOUNCES, CIRC_MARGIN, MIN_CIRC_RADIUS
 import Mod_ArUco
 import Mod_Bbox
 import Mod_Preprocess
@@ -70,11 +70,6 @@ def run_tracking_module(canny_threshold1):
     last_detection_time = time.time()
     working = True
 
-    # Variables for extra circle detection
-    min_circle_radius = 16
-    min_radius_difference = 10
-    avg_radius = 0
-
     buffer_size = 50
     ball_buffer = CircularBuffer(buffer_size)
 
@@ -129,17 +124,14 @@ def run_tracking_module(canny_threshold1):
 
             circles = cv2.HoughCircles(gray_roi, cv2.HOUGH_GRADIENT, dp=1, minDist=20, param1=40, param2=20, minRadius=5, maxRadius=30)
 
-            # Margin to check if the center is already present in all_circles
-            margin = 10
-
             if circles is not None:
                 circles = np.uint16(np.around(circles))
                 for circle in circles[0, :]:
                     center = (circle[0], circle[1])
                     radius = circle[2]
                 if polygon.contains(Point(center[0] + xbox1, center[1] + ybox1)):
-                    if not ball_buffer.exists_within_margin(center, margin): 
-                        if radius >= min_circle_radius:
+                    if not ball_buffer.exists_within_margin(center, CIRC_MARGIN): 
+                        if radius >= MIN_CIRC_RADIUS:
                             adjusted_center = (center[0] + xbox1, center[1] + ybox1)
                             
                             cv2.circle(img, adjusted_center, radius + 10, (0, 255, 0), 2) 
